@@ -16,6 +16,6 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
-    preset: 'node-server',
+    // preset 由部署平台自动检测，不硬编码
   },
 })
