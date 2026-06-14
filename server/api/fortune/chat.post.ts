@@ -1,5 +1,9 @@
 import { createAIClient, getDefaultModel } from '~/server/services/ai/provider'
-import { checkRateLimit, getRemainingRequests } from '~/server/services/ai/rate-limiter'
+import {
+  checkMinuteRateLimit,
+  canStartConversation,
+  incrementConversation,
+} from '~/server/services/ai/rate-limiter'
 import { getSkill } from '~/config/skills'
 import type { ChatRequest } from '~/types/chat'
 
@@ -14,15 +18,24 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // 2. 限流检查
+  // 2. 获取 IP
   const ip = getHeader(event, 'x-forwarded-for')
     ?? getHeader(event, 'x-real-ip')
     ?? 'unknown'
 
-  if (!checkRateLimit(ip as string)) {
+  // 3. 每分钟频率限流
+  if (!checkMinuteRateLimit(ip as string)) {
     throw createError({
       statusCode: 429,
       statusMessage: '请求过于频繁，请稍后再试',
+    })
+  }
+
+  // 4. 免费次数检查
+  if (!canStartConversation(ip as string)) {
+    throw createError({
+      statusCode: 402,
+      statusMessage: '免费对话次数已用完，敬请期待付费功能',
     })
   }
 
@@ -74,6 +87,8 @@ export default defineEventHandler(async (event) => {
             await eventStream.push(token)
           }
         }
+        // 成功完成，扣减一次对话次数
+        incrementConversation(ip as string)
         await eventStream.push('__DONE__')
         await eventStream.close()
       } catch (err: any) {

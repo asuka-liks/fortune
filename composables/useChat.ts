@@ -7,6 +7,26 @@ export function useChat() {
 
   let abortController: AbortController | null = null
 
+  // 配额状态
+  const remainingQuota = ref(3)
+  const quotaTotal = ref(3)
+  const isQuotaExhausted = computed(() => remainingQuota.value <= 0)
+
+  /** 从服务端查询当前 IP 的剩余对话次数 */
+  async function fetchQuota(): Promise<void> {
+    try {
+      const res = await fetch('/api/fortune/quota')
+      if (res.ok) {
+        const data = await res.json()
+        // -1 表示付费用户（无限），用 Infinity 表示
+        remainingQuota.value = data.remaining === -1 ? Infinity : data.remaining
+        quotaTotal.value = data.total
+      }
+    } catch {
+      // 查询失败时保持旧值，不阻断正常使用
+    }
+  }
+
   /** 发送消息并接收流式回复 */
   async function sendMessage(text: string): Promise<void> {
     const session = chatStore.activeSession
@@ -17,6 +37,13 @@ export function useChat() {
 
     if (!skillStore.activeSkillId) {
       chatStore.setError('请先选择一种算命方式')
+      return
+    }
+
+    // 发送前检查配额
+    await fetchQuota()
+    if (remainingQuota.value <= 0) {
+      chatStore.setError('免费对话次数已用完，敬请期待付费功能')
       return
     }
 
@@ -71,6 +98,10 @@ export function useChat() {
       })
 
       if (!response.ok) {
+        if (response.status === 402) {
+          remainingQuota.value = 0
+          throw new Error('免费对话次数已用完，敬请期待付费功能')
+        }
         const errText = await response.text()
         throw new Error(errText || `请求失败 (${response.status})`)
       }
@@ -103,7 +134,13 @@ export function useChat() {
             // 空行 = 事件结束，flush 积累的 data 行
             const content = sseDataLines.join('\n')
             sseDataLines.length = 0
-            if (content === '__DONE__') return
+            if (content === '__DONE__') {
+              // 成功完成，本地扣减一次配额（服务端已扣，客户端同步）
+              if (remainingQuota.value > 0 && remainingQuota.value < Infinity) {
+                remainingQuota.value--
+              }
+              return
+            }
             chatStore.appendToLastAssistantMessage(content)
           }
           // 忽略 event:, id:, retry: 等行
@@ -113,7 +150,11 @@ export function useChat() {
       // 流结束后 flush 残余数据（以防最后没有空行）
       if (sseDataLines.length > 0) {
         const content = sseDataLines.join('\n')
-        if (content !== '__DONE__') {
+        if (content === '__DONE__') {
+          if (remainingQuota.value > 0 && remainingQuota.value < Infinity) {
+            remainingQuota.value--
+          }
+        } else {
           chatStore.appendToLastAssistantMessage(content)
         }
       }
@@ -142,5 +183,9 @@ export function useChat() {
   return {
     sendMessage,
     stopGeneration,
+    remainingQuota,
+    quotaTotal,
+    isQuotaExhausted,
+    fetchQuota,
   }
 }

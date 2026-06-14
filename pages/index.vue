@@ -23,6 +23,8 @@
       :error="chatStore.error"
       :can-chat="!!skillStore.activeSkillId && skillStore.isSkillReady"
       :skill-name="activeSkillName"
+      :remaining-quota="remainingQuota"
+      :quota-total="quotaTotal"
       @send="handleSend"
       @stop="handleStop"
       @change-skill="skillStore.deactivateSkill()"
@@ -36,7 +38,7 @@ import { getAllSkills } from '~/config/skills'
 
 const chatStore = useChatStore()
 const skillStore = useSkillStore()
-const { sendMessage, stopGeneration } = useChat()
+const { sendMessage, stopGeneration, remainingQuota, quotaTotal, fetchQuota } = useChat()
 const { load, save } = useChatPersistence()
 
 // 初始化
@@ -45,6 +47,7 @@ onMounted(() => {
   if (!restored) {
     chatStore.createSession()
   }
+  fetchQuota()
 })
 
 // 自动保存

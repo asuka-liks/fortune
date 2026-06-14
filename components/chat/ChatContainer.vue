@@ -31,6 +31,8 @@
       :is-streaming="isStreaming"
       :disabled="!canChat"
       :placeholder="inputPlaceholder"
+      :remaining-quota="remainingQuota"
+      :quota-total="quotaTotal"
       @send="$emit('send', $event)"
       @stop="$emit('stop')"
     />
@@ -46,6 +48,8 @@ const props = defineProps<{
   error: string | null
   canChat: boolean
   skillName?: string
+  remainingQuota: number
+  quotaTotal: number
 }>()
 
 const emit = defineEmits<{
