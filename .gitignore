@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+vendor/
+bower_components/
+
+# Build outputs
+dist/
+build/
+out/
+target/
+*.o
+*.class
+*.pyc
+__pycache__/
+*.egg-info/
+*.war
+
+# IDE & Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.log
+
+# OS
+Desktop.ini
+$RECYCLE.BIN/
+
+# Coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Nuxt
+.nuxt/
+.output/
+.data/
+
+# Cache
+.cache/
+*.tsbuildinfo
+.npm
+.eslintcache
+.stylelintcache
