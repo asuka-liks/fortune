@@ -1,11 +1,25 @@
 <template>
   <div class="border-t bg-white px-4 py-3">
+    <!-- 配额提示 -->
+    <div
+      v-if="quotaTotal > 0 && remainingQuota <= 2"
+      class="mb-2 flex items-center justify-center gap-1 text-xs"
+      :class="remainingQuota === 0 ? 'text-red-500' : 'text-amber-600'"
+    >
+      <span v-if="remainingQuota > 0">
+        🔮 剩余 <strong>{{ remainingQuota }}</strong> 次免费对话
+      </span>
+      <span v-else>
+        🚫 免费次数已用完，敬请期待付费功能
+      </span>
+    </div>
+
     <form class="flex items-end gap-2" @submit.prevent="handleSubmit">
       <textarea
         ref="textareaRef"
         v-model="inputText"
-        :disabled="disabled"
-        :placeholder="placeholder"
+        :disabled="disabled || isQuotaExhausted"
+        :placeholder="isQuotaExhausted ? '免费次数已用完' : placeholder"
         rows="1"
         class="flex-1 resize-none rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-purple-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 disabled:opacity-50"
         :style="{ maxHeight: '120px' }"
@@ -16,7 +30,7 @@
         v-if="!isStreaming"
         type="submit"
         variant="primary"
-        :disabled="!inputText.trim() || disabled"
+        :disabled="!inputText.trim() || disabled || isQuotaExhausted"
       >
         发送
       </BaseButton>
@@ -36,6 +50,8 @@ const props = defineProps<{
   isStreaming: boolean
   disabled: boolean
   placeholder?: string
+  remainingQuota: number
+  quotaTotal: number
 }>()
 
 const emit = defineEmits<{
@@ -45,6 +61,8 @@ const emit = defineEmits<{
 
 const inputText = ref('')
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
+
+const isQuotaExhausted = computed(() => props.remainingQuota <= 0)
 
 function handleSubmit(e?: Event) {
   if (e && (e as KeyboardEvent).shiftKey) return // Shift+Enter 换行
