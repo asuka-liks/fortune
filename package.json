@@ -9,6 +9,7 @@
     "preview": "nuxt preview"
   },
   "dependencies": {
+    "@edgeone/nuxt-pages": "^1.1.0",
     "@pinia/nuxt": "^0.9.0",
     "@vueuse/core": "^12.0.0",
     "marked": "^18.0.5",
