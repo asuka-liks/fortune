@@ -8,12 +8,12 @@
     </div>
     <div class="border-t p-4">
       <div class="flex items-center justify-between">
-        <span class="text-xs font-medium text-gray-400">对话历史</span>
+        <span class="text-xs font-medium text-gray-400">{{ t('sidebar.history') }}</span>
         <button
           class="rounded px-2 py-1 text-xs text-gray-400 hover:bg-gray-100 hover:text-gray-600"
           @click="handleNewChat"
         >
-          + 新对话
+          {{ t('sidebar.newChat') }}
         </button>
       </div>
       <div class="mt-2 max-h-40 overflow-y-auto space-y-1">
@@ -28,10 +28,10 @@
           ]"
           @click="chatStore.activeSessionId = session.id"
         >
-          {{ session.title || '新对话' }}
+          {{ session.title || t('sidebar.newChatDefault') }}
         </button>
         <p v-if="chatStore.sessions.length === 0" class="text-xs text-gray-400">
-          暂无对话
+          {{ t('sidebar.empty') }}
         </p>
       </div>
     </div>
@@ -43,6 +43,7 @@ import type { SkillId } from '~/types/skill'
 
 const chatStore = useChatStore()
 const skillStore = useSkillStore()
+const { t } = useI18n()
 
 function handleSelectSkill(id: SkillId) {
   skillStore.activateSkill(id)

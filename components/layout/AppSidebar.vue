@@ -17,7 +17,7 @@
         />
         <aside class="absolute left-0 top-0 flex h-full w-72 flex-col border-r bg-white shadow-xl">
           <div class="flex items-center justify-between border-b px-4 py-3">
-            <span class="font-semibold text-purple-700">🔮 算命菜单</span>
+            <span class="font-semibold text-purple-700">{{ t('sidebar.menu') }}</span>
             <button
               class="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
               @click="$emit('closeMobile')"
@@ -42,6 +42,8 @@ defineProps<{
 defineEmits<{
   closeMobile: []
 }>()
+
+const { t } = useI18n()
 </script>
 
 <style scoped>

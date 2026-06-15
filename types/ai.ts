@@ -19,6 +19,9 @@ export interface TarotCard {
   upright: string
   reversed: string
   description: string
+  uprightEn?: string
+  reversedEn?: string
+  descriptionEn?: string
 }
 
 /** 抽取的塔罗牌结果 */

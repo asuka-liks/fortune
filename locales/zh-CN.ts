@@ -1,0 +1,92 @@
+import type { TranslationMap } from './index'
+
+const zhCN: TranslationMap = {
+  // ==================== 应用级 ====================
+  'app.title': '🔮 AI 算命',
+  'app.subtitle': 'AI 解读 · 仅供娱乐',
+  'app.footer': 'AI 算命 · 仅供娱乐参考 · 理性看待',
+
+  // ==================== 侧边栏 ====================
+  'sidebar.menu': '🔮 算命菜单',
+  'sidebar.history': '对话历史',
+  'sidebar.newChat': '+ 新对话',
+  'sidebar.newChatDefault': '新对话',
+  'sidebar.empty': '暂无对话',
+
+  // ==================== 聊天 ====================
+  'chat.currentMode': '当前模式：',
+  'chat.switch': '切换 →',
+  'chat.dismiss': '关闭',
+  'chat.inputPlaceholder': '输入你的问题...',
+  'chat.selectSkillFirst': '请先在左侧选择一种算命方式',
+  'chat.quotaRemaining': '🔮 剩余 {n} 次免费对话',
+  'chat.quotaExhausted': '🚫 免费次数已用完，敬请期待付费功能',
+  'chat.quotaExhaustedShort': '免费次数已用完',
+  'chat.send': '发送',
+  'chat.stop': '停止',
+  'chat.emptyTitle': '开始你的算命之旅',
+  'chat.emptyDesc': '在左侧选择一种算命方式，填写相关信息后即可与 AI 大师对话。',
+
+  // ==================== 技能选择 ====================
+  'skill.selectorTitle': '选择算命类型',
+  'skill.bazi.name': '八字命理',
+  'skill.bazi.desc': '基于生辰八字的传统命理分析，洞察人生运势',
+  'skill.astrology.name': '星座运势',
+  'skill.astrology.desc': '十二星座每日、每周、每月、年度运势解读',
+  'skill.tarot.name': '塔罗占卜',
+  'skill.tarot.desc': '抽取塔罗牌，通过牌面解读为你指引方向',
+
+  // ==================== 八字 ====================
+  'bazi.title': '八字命理 · 出生信息',
+  'bazi.birthDate': '出生日期（公历）',
+  'bazi.birthTime': '出生时辰',
+  'bazi.selectTime': '请选择时辰',
+  'bazi.gender': '性别',
+  'bazi.male': '♂ 男',
+  'bazi.female': '♀ 女',
+  'bazi.submit': '开始八字分析',
+
+  // ==================== 星座 ====================
+  'astrology.title': '星座运势 · 选择星座',
+  'astrology.selectSign': '选择星座',
+  'astrology.period': '运势周期',
+  'astrology.periodDaily': '今日',
+  'astrology.periodWeekly': '本周',
+  'astrology.periodMonthly': '本月',
+  'astrology.periodYearly': '年度',
+  'astrology.submit': '查看运势',
+
+  // ==================== 塔罗 ====================
+  'tarot.title': '塔罗占卜 · 抽牌',
+  'tarot.question': '你想问什么？（可选）',
+  'tarot.questionPlaceholder': '例如：最近的事业发展如何？',
+  'tarot.selectSpread': '选择牌阵',
+  'tarot.single': '单张',
+  'tarot.singleDesc': '快速指引',
+  'tarot.threeCard': '三张',
+  'tarot.threeCardDesc': '过去·现在·未来',
+  'tarot.celticCross': '凯尔特十字',
+  'tarot.celticCrossDesc': '十张全面解读',
+  'tarot.drawing': '抽牌中...',
+  'tarot.startDraw': '🃏 开始抽牌',
+  'tarot.drawResult': '抽牌结果',
+  'tarot.upright': '正位',
+  'tarot.reversed': '逆位',
+  'tarot.startReading': '开始解读',
+  'tarot.noQuestion': '未指定问题',
+  'tarot.cardPosition': '第{n}张',
+  'tarot.cardLabel': '张：',
+  'tarot.cardName': '牌名：',
+  'tarot.orientation': '方向：',
+  'tarot.meaning': '含义：',
+  'tarot.descLabel': '描述：',
+  'tarot.clickFlip': '点击翻牌',
+
+  // ==================== 错误 ====================
+  'error.createSession': '请先创建一个对话会话',
+  'error.selectSkill': '请先选择一种算命方式',
+  'error.quotaExhausted': '免费对话次数已用完，敬请期待付费功能',
+  'error.retry': '请求失败，请重试',
+}
+
+export default zhCN

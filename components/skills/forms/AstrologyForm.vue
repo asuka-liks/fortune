@@ -2,13 +2,13 @@
   <div class="space-y-4 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
     <div class="flex items-center gap-2">
       <span class="text-lg">✨</span>
-      <span class="font-semibold text-gray-800">星座运势 · 选择星座</span>
+      <span class="font-semibold text-gray-800">{{ t('astrology.title') }}</span>
     </div>
 
     <div class="space-y-3">
       <!-- 星座选择 -->
       <div>
-        <label class="mb-1 block text-xs font-medium text-gray-600">选择星座</label>
+        <label class="mb-1 block text-xs font-medium text-gray-600">{{ t('astrology.selectSign') }}</label>
         <div class="grid grid-cols-4 gap-2">
           <button
             v-for="sign in zodiacSigns"
@@ -28,7 +28,7 @@
 
       <!-- 周期选择 -->
       <div>
-        <label class="mb-1 block text-xs font-medium text-gray-600">运势周期</label>
+        <label class="mb-1 block text-xs font-medium text-gray-600">{{ t('astrology.period') }}</label>
         <div class="flex gap-2">
           <button
             v-for="p in periods"
@@ -52,13 +52,15 @@
         :disabled="!isValid"
         @click="handleSubmit"
       >
-        查看运势
+        {{ t('astrology.submit') }}
       </BaseButton>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+const { t, locale } = useI18n()
+
 const emit = defineEmits<{
   submit: [context: Record<string, string>]
 }>()
@@ -68,7 +70,8 @@ const form = reactive({
   period: '',
 })
 
-const zodiacSigns = [
+// 星座数据：中英文 value 不同（value 会被发送给 AI）
+const zhZodiacSigns = [
   { value: '白羊座 (3.21-4.19)', label: '♈ 白羊' },
   { value: '金牛座 (4.20-5.20)', label: '♉ 金牛' },
   { value: '双子座 (5.21-6.21)', label: '♊ 双子' },
@@ -83,12 +86,43 @@ const zodiacSigns = [
   { value: '双鱼座 (2.19-3.20)', label: '♓ 双鱼' },
 ]
 
-const periods = [
+const enZodiacSigns = [
+  { value: 'Aries (3.21-4.19)', label: '♈ Aries' },
+  { value: 'Taurus (4.20-5.20)', label: '♉ Taurus' },
+  { value: 'Gemini (5.21-6.21)', label: '♊ Gemini' },
+  { value: 'Cancer (6.22-7.22)', label: '♋ Cancer' },
+  { value: 'Leo (7.23-8.22)', label: '♌ Leo' },
+  { value: 'Virgo (8.23-9.22)', label: '♍ Virgo' },
+  { value: 'Libra (9.23-10.23)', label: '♎ Libra' },
+  { value: 'Scorpio (10.24-11.22)', label: '♏ Scorpio' },
+  { value: 'Sagittarius (11.23-12.21)', label: '♐ Sagittarius' },
+  { value: 'Capricorn (12.22-1.19)', label: '♑ Capricorn' },
+  { value: 'Aquarius (1.20-2.18)', label: '♒ Aquarius' },
+  { value: 'Pisces (2.19-3.20)', label: '♓ Pisces' },
+]
+
+// 周期数据
+const zhPeriods = [
   { value: '今日运势', label: '今日' },
   { value: '本周运势', label: '本周' },
   { value: '本月运势', label: '本月' },
   { value: '年度运势', label: '年度' },
 ]
+
+const enPeriods = [
+  { value: 'Daily', label: 'Daily' },
+  { value: 'Weekly', label: 'Weekly' },
+  { value: 'Monthly', label: 'Monthly' },
+  { value: 'Yearly', label: 'Yearly' },
+]
+
+const zodiacSigns = computed(() =>
+  locale.value === 'en' ? enZodiacSigns : zhZodiacSigns,
+)
+
+const periods = computed(() =>
+  locale.value === 'en' ? enPeriods : zhPeriods,
+)
 
 const isValid = computed(() => form.zodiacSign && form.period)
 

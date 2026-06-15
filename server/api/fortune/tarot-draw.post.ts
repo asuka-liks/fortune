@@ -2,8 +2,9 @@ import { drawCards, formatDrawnCards } from '~/server/utils/tarot'
 import type { TarotDrawInput, TarotDrawResult } from '~/types/fortune'
 
 export default defineEventHandler(async (event) => {
-  const body = await readBody<{ spreadType?: string }>(event)
+  const body = await readBody<{ spreadType?: string; locale?: string }>(event)
   const spreadType = body?.spreadType ?? 'three-card'
+  const locale = body?.locale ?? 'zh-CN'
 
   // 根据牌阵决定抽牌数量
   const cardCounts: Record<string, number> = {
@@ -17,12 +18,12 @@ export default defineEventHandler(async (event) => {
   if (count > 10) {
     throw createError({
       statusCode: 400,
-      statusMessage: '牌阵数量不能超过10张',
+      statusMessage: locale === 'en' ? 'Spread cannot exceed 10 cards' : '牌阵数量不能超过10张',
     })
   }
 
-  const cards = drawCards(count)
-  const formattedText = formatDrawnCards(cards)
+  const cards = drawCards(count, locale)
+  const formattedText = formatDrawnCards(cards, locale)
 
   const result: TarotDrawResult = {
     spreadType,

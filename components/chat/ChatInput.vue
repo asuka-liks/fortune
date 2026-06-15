@@ -7,10 +7,10 @@
       :class="remainingQuota === 0 ? 'text-red-500' : 'text-amber-600'"
     >
       <span v-if="remainingQuota > 0">
-        🔮 剩余 <strong>{{ remainingQuota }}</strong> 次免费对话
+        {{ t('chat.quotaRemaining', { n: remainingQuota }) }}
       </span>
       <span v-else>
-        🚫 免费次数已用完，敬请期待付费功能
+        {{ t('chat.quotaExhausted') }}
       </span>
     </div>
 
@@ -19,7 +19,7 @@
         ref="textareaRef"
         v-model="inputText"
         :disabled="disabled || isQuotaExhausted"
-        :placeholder="isQuotaExhausted ? '免费次数已用完' : placeholder"
+        :placeholder="isQuotaExhausted ? t('chat.quotaExhaustedShort') : placeholder"
         rows="1"
         class="flex-1 resize-none rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-purple-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 disabled:opacity-50"
         :style="{ maxHeight: '120px' }"
@@ -32,14 +32,14 @@
         variant="primary"
         :disabled="!inputText.trim() || disabled || isQuotaExhausted"
       >
-        发送
+        {{ t('chat.send') }}
       </BaseButton>
       <BaseButton
         v-else
         variant="danger"
         @click="$emit('stop')"
       >
-        停止
+        {{ t('chat.stop') }}
       </BaseButton>
     </form>
   </div>
@@ -58,6 +58,8 @@ const emit = defineEmits<{
   send: [text: string]
   stop: []
 }>()
+
+const { t } = useI18n()
 
 const inputText = ref('')
 const textareaRef = ref<HTMLTextAreaElement | null>(null)

@@ -10,7 +10,7 @@ export default defineNuxtConfig({
   css: ['~/assets/css/main.css'],
   app: {
     head: {
-      title: 'AI 算命 - Fortune Telling',
+      title: 'Fortune Telling - AI Fortune Teller',
       charset: 'utf-8',
       viewport: 'width=device-width, initial-scale=1',
     },

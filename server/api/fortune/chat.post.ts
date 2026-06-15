@@ -48,12 +48,16 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // 4. 构建系统提示词
-  let systemPrompt = skill.systemPrompt
+  // 4. 构建系统提示词（根据语言选择）
+  const locale = body.locale ?? 'zh-CN'
+  const rawPrompt = (locale === 'en' && skill.systemPromptEn)
+    ? skill.systemPromptEn
+    : skill.systemPrompt
+  let systemPrompt = rawPrompt
   for (const [key, value] of Object.entries(body.context ?? {})) {
     systemPrompt = systemPrompt.replaceAll(`{{${key}}}`, String(value))
   }
-  systemPrompt = systemPrompt.replaceAll(/{{[^}]+}}/g, '(未提供)')
+  systemPrompt = systemPrompt.replaceAll(/{{[^}]+}}/g, locale === 'en' ? '(not provided)' : '(未提供)')
 
   // 5. 构建完整的 messages 数组
   const messages = [

@@ -19,8 +19,11 @@ export interface SkillDefinition {
   icon: string
   category: 'chinese' | 'western' | 'mystical'
 
-  /** 系统提示词模板，使用 {{placeholder}} 语法 */
+  /** 系统提示词模板（中文），使用 {{placeholder}} 语法 */
   systemPrompt: string
+
+  /** 系统提示词模板（英文） */
+  systemPromptEn?: string
 
   /** 用户需要填写的输入字段 */
   inputs: SkillInputField[]

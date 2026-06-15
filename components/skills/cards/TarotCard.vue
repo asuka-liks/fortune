@@ -9,7 +9,7 @@
       <div class="card-flip-front absolute inset-0 flex flex-col items-center justify-center rounded-xl border-2 border-amber-300 bg-gradient-to-br from-amber-100 to-amber-200 shadow-md">
         <span class="text-4xl">🃏</span>
         <span class="mt-2 text-xs font-medium text-amber-700">{{ position }}</span>
-        <span class="mt-1 text-[10px] text-amber-500">点击翻牌</span>
+        <span class="mt-1 text-[10px] text-amber-500">{{ t('tarot.clickFlip') }}</span>
       </div>
 
       <!-- 反面（牌面） -->
@@ -28,7 +28,7 @@
           :class="orientation === 'upright' ? 'text-green-600' : 'text-orange-500'"
           class="mt-1 text-xs font-medium"
         >
-          {{ orientation === 'upright' ? '▲ 正位' : '▼ 逆位' }}
+          {{ orientation === 'upright' ? `▲ ${t('tarot.upright')}` : `▼ ${t('tarot.reversed')}` }}
         </div>
         <div class="mt-2 flex-1 overflow-y-auto text-[11px] leading-relaxed text-gray-600">
           {{ orientation === 'upright' ? card.upright : card.reversed }}
@@ -40,6 +40,8 @@
 
 <script setup lang="ts">
 import type { TarotCard as TarotCardType } from '~/types/ai'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   card: TarotCardType

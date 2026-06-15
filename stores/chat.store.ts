@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import type { ChatMessage, ChatSession } from '~/types/chat'
+import { useLocaleStore } from './locale.store'
 
 export const useChatStore = defineStore('chat', () => {
   const sessions = ref<ChatSession[]>([])
@@ -15,9 +16,11 @@ export const useChatStore = defineStore('chat', () => {
 
   function createSession(skillId?: string): ChatSession {
     const id = crypto.randomUUID()
+    const localeStore = useLocaleStore()
+    const defaultTitle = localeStore.locale === 'en' ? 'New Chat' : '新对话'
     const session: ChatSession = {
       id,
-      title: '新对话',
+      title: defaultTitle,
       skillId: skillId ?? null,
       messages: [],
       createdAt: Date.now(),

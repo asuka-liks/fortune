@@ -18,6 +18,7 @@ export interface ChatRequest {
     content: string
   }>
   provider?: 'qwen' | 'deepseek'
+  locale?: string
 }
 
 /** 聊天会话 */

@@ -34,8 +34,6 @@
 </template>
 
 <script setup lang="ts">
-import { getAllSkills } from '~/config/skills'
-
 const chatStore = useChatStore()
 const skillStore = useSkillStore()
 const { sendMessage, stopGeneration, remainingQuota, quotaTotal, fetchQuota } = useChat()
@@ -57,9 +55,11 @@ watch(
   { deep: true },
 )
 
+const { t } = useI18n()
+
 const activeSkillName = computed(() => {
   if (!skillStore.activeSkillId) return undefined
-  return getAllSkills().find(s => s.id === skillStore.activeSkillId)?.name
+  return t(`skill.${skillStore.activeSkillId}.name`)
 })
 
 // 是否显示技能表单：已选技能但尚未就绪

@@ -4,6 +4,8 @@ export function useChat() {
   const chatStore = useChatStore()
   const skillStore = useSkillStore()
   const settingsStore = useSettingsStore()
+  const localeStore = useLocaleStore()
+  const { t } = useI18n()
 
   let abortController: AbortController | null = null
 
@@ -31,19 +33,19 @@ export function useChat() {
   async function sendMessage(text: string): Promise<void> {
     const session = chatStore.activeSession
     if (!session) {
-      chatStore.setError('请先创建一个对话会话')
+      chatStore.setError(t('error.createSession'))
       return
     }
 
     if (!skillStore.activeSkillId) {
-      chatStore.setError('请先选择一种算命方式')
+      chatStore.setError(t('error.selectSkill'))
       return
     }
 
     // 发送前检查配额
     await fetchQuota()
     if (remainingQuota.value <= 0) {
-      chatStore.setError('免费对话次数已用完，敬请期待付费功能')
+      chatStore.setError(t('error.quotaExhausted'))
       return
     }
 
@@ -68,7 +70,6 @@ export function useChat() {
     chatStore.addMessage(session.id, assistantMsg)
 
     // 构建请求体
-    const resolvedPrompt = skillStore.resolveSystemPrompt('')
     const context = { ...skillStore.skillContext }
 
     // 过滤掉空的 AI 占位消息（内容为空的就是刚添加的占位）
@@ -93,6 +94,7 @@ export function useChat() {
           },
           messages,
           provider: settingsStore.preferredProvider,
+          locale: localeStore.locale,
         }),
         signal: abortController.signal,
       })
@@ -100,15 +102,15 @@ export function useChat() {
       if (!response.ok) {
         if (response.status === 402) {
           remainingQuota.value = 0
-          throw new Error('免费对话次数已用完，敬请期待付费功能')
+          throw new Error(t('error.quotaExhausted'))
         }
         const errText = await response.text()
-        throw new Error(errText || `请求失败 (${response.status})`)
+        throw new Error(errText || `Request failed (${response.status})`)
       }
 
       // 读取 SSE 流（Nitro EventStream 格式：data: <content>\n\n）
       const reader = response.body?.getReader()
-      if (!reader) throw new Error('无法读取响应流')
+      if (!reader) throw new Error('Cannot read response stream')
 
       const decoder = new TextDecoder()
       let buffer = ''
@@ -166,7 +168,7 @@ export function useChat() {
           session.messages.pop()
         }
       } else {
-        chatStore.setError(err.message || '请求失败，请重试')
+        chatStore.setError(err.message || t('error.retry'))
       }
     } finally {
       chatStore.setStreaming(false)
