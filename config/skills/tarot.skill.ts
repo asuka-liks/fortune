@@ -9,6 +9,9 @@ export const tarotSkill: SkillDefinition = {
 
   systemPrompt: `你是一位经验丰富的塔罗牌解读师，擅长通过塔罗牌的意象和象征来洞察问题的本质，指引前进的方向。
 
+## 用户提问
+{{question}}
+
 ## 抽牌结果
 {{drawnCards}}
 
@@ -37,6 +40,9 @@ export const tarotSkill: SkillDefinition = {
 - 结尾请加上 "⚠️ 以上内容由 AI 生成，仅供娱乐参考，请理性看待。"`,
 
   systemPromptEn: `You are an experienced tarot card reader, skilled at using the imagery and symbolism of tarot to gain insight into the essence of questions and guide the way forward.
+
+## User Question
+{{question}}
 
 ## Drawn Cards
 {{drawnCards}}

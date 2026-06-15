@@ -64,6 +64,12 @@ const showSkillForm = computed(
   () => skillStore.activeSkillId && !skillStore.isSkillReady,
 )
 
+const autoStartKeys: Record<string, string> = {
+  bazi: 'chat.autoStartBazi',
+  astrology: 'chat.autoStartAstrology',
+  tarot: 'chat.autoStartTarot',
+}
+
 function handleSkillSubmit(context: Record<string, string>) {
   // 提交表单时才新建会话
   chatStore.createSession(skillStore.activeSkillId!)
@@ -71,6 +77,10 @@ function handleSkillSubmit(context: Record<string, string>) {
     skillStore.setContext(key, value)
   }
   skillStore.isSkillReady = true
+
+  // 自动发送一条消息，触发 AI 回复
+  const skillId = skillStore.activeSkillId!
+  sendMessage(t(autoStartKeys[skillId]))
 }
 
 async function handleSend(text: string) {

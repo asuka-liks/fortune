@@ -26,6 +26,9 @@ const en: TranslationMap = {
   'chat.stop': 'Stop',
   'chat.emptyTitle': 'Begin Your Fortune Journey',
   'chat.emptyDesc': 'Select a fortune-telling mode on the left, fill in your details, and start chatting with the AI master.',
+  'chat.autoStartBazi': 'Start analysis',
+  'chat.autoStartAstrology': 'View horoscope',
+  'chat.autoStartTarot': 'Start reading',
 
   // ==================== Skill Selection ====================
   'skill.selectorTitle': 'Choose Fortune Type',

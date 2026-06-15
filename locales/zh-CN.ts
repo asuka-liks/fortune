@@ -26,6 +26,9 @@ const zhCN: TranslationMap = {
   'chat.stop': '停止',
   'chat.emptyTitle': '开始你的算命之旅',
   'chat.emptyDesc': '在左侧选择一种算命方式，填写相关信息后即可与 AI 大师对话。',
+  'chat.autoStartBazi': '开始分析',
+  'chat.autoStartAstrology': '查看运势',
+  'chat.autoStartTarot': '开始解读',
 
   // ==================== 技能选择 ====================
   'skill.selectorTitle': '选择算命类型',
