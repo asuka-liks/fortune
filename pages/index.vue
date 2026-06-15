@@ -39,12 +39,9 @@ const skillStore = useSkillStore()
 const { sendMessage, stopGeneration, remainingQuota, quotaTotal, fetchQuota } = useChat()
 const { load, save } = useChatPersistence()
 
-// 初始化
+// 初始化：恢复历史会话到侧边栏
 onMounted(() => {
-  const restored = load()
-  if (!restored) {
-    chatStore.createSession()
-  }
+  load()
   fetchQuota()
 })
 
@@ -68,6 +65,8 @@ const showSkillForm = computed(
 )
 
 function handleSkillSubmit(context: Record<string, string>) {
+  // 提交表单时才新建会话
+  chatStore.createSession(skillStore.activeSkillId!)
   for (const [key, value] of Object.entries(context)) {
     skillStore.setContext(key, value)
   }

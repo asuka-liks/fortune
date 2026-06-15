@@ -17,19 +17,51 @@
         </button>
       </div>
       <div class="mt-2 max-h-40 overflow-y-auto space-y-1">
-        <button
+        <div
           v-for="session in chatStore.sessions"
           :key="session.id"
-          :class="[
-            'w-full truncate rounded px-3 py-1.5 text-left text-xs transition-colors',
-            chatStore.activeSessionId === session.id
-              ? 'bg-purple-100 text-purple-700'
-              : 'text-gray-600 hover:bg-gray-100',
-          ]"
-          @click="chatStore.activeSessionId = session.id"
+          class="group relative"
         >
-          {{ session.title || t('sidebar.newChatDefault') }}
-        </button>
+          <!-- 正常显示模式 -->
+          <div
+            v-if="editingId !== session.id"
+            class="flex items-center"
+          >
+            <button
+              :class="[
+                'flex-1 truncate rounded px-3 py-1.5 text-left text-xs transition-colors',
+                chatStore.activeSessionId === session.id
+                  ? 'bg-purple-100 text-purple-700'
+                  : 'text-gray-600 hover:bg-gray-100',
+              ]"
+              @click="chatStore.activeSessionId = session.id"
+              @dblclick="startRename(session.id, session.title)"
+            >
+              {{ session.title || t('sidebar.newChatDefault') }}
+            </button>
+            <!-- 删除按钮，hover 时显示 -->
+            <button
+              class="ml-0.5 shrink-0 rounded p-1 text-gray-400 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+              @click="handleDelete(session.id)"
+            >
+              <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- 编辑模式 -->
+          <input
+            v-else
+            :data-rename-input="session.id"
+            v-model="renameText"
+            class="w-full rounded px-2 py-1 text-xs text-gray-700 outline-none ring-1 ring-purple-400"
+            maxlength="50"
+            @keydown.enter="confirmRename(session.id)"
+            @keydown.escape="cancelRename"
+            @blur="confirmRename(session.id)"
+          />
+        </div>
         <p v-if="chatStore.sessions.length === 0" class="text-xs text-gray-400">
           {{ t('sidebar.empty') }}
         </p>
@@ -45,11 +77,45 @@ const chatStore = useChatStore()
 const skillStore = useSkillStore()
 const { t } = useI18n()
 
+// ---- 重命名 ----
+const editingId = ref<string | null>(null)
+const renameText = ref('')
+
+function startRename(id: string, currentTitle: string) {
+  editingId.value = id
+  renameText.value = currentTitle
+  nextTick(() => {
+    // 自动聚焦到输入框
+    const el = document.querySelector<HTMLInputElement>(
+      `[data-rename-input="${id}"]`,
+    )
+    el?.focus()
+    el?.select()
+  })
+}
+
+function confirmRename(id: string) {
+  if (editingId.value !== id) return
+  chatStore.renameSession(id, renameText.value)
+  editingId.value = null
+}
+
+function cancelRename() {
+  editingId.value = null
+}
+
+// ---- 删除 ----
+function handleDelete(id: string) {
+  chatStore.deleteSession(id)
+  // 删除后若无活跃会话，自动新建
+  if (!chatStore.activeSession) {
+    chatStore.createSession()
+  }
+}
+
+// ---- 切换技能：只激活技能，等表单提交后再新建会话 ----
 function handleSelectSkill(id: SkillId) {
   skillStore.activateSkill(id)
-  if (!chatStore.activeSession) {
-    chatStore.createSession(id)
-  }
 }
 
 function handleNewChat() {

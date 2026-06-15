@@ -48,6 +48,13 @@ export const useChatStore = defineStore('chat', () => {
     }
   }
 
+  function renameSession(sessionId: string, title: string) {
+    const session = sessions.value.find(s => s.id === sessionId)
+    if (session) {
+      session.title = title.trim() || 'Untitled'
+    }
+  }
+
   function deleteSession(sessionId: string) {
     sessions.value = sessions.value.filter(s => s.id !== sessionId)
     if (activeSessionId.value === sessionId) {
@@ -79,6 +86,7 @@ export const useChatStore = defineStore('chat', () => {
     createSession,
     addMessage,
     appendToLastAssistantMessage,
+    renameSession,
     deleteSession,
     clearCurrentSession,
     setStreaming,
