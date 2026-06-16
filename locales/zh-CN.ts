@@ -58,6 +58,10 @@ const zhCN: TranslationMap = {
   'astrology.periodMonthly': '本月',
   'astrology.periodYearly': '年度',
   'astrology.submit': '查看运势',
+  'astrology.findByBirthday': '不知道星座？输入生日自动匹配 →',
+  'astrology.birthMonth': '月',
+  'astrology.birthDay': '日',
+  'astrology.closePicker': '关闭',
 
   // ==================== 塔罗 ====================
   'tarot.title': '塔罗占卜 · 抽牌',

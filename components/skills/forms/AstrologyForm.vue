@@ -24,6 +24,48 @@
             {{ sign.label }}
           </button>
         </div>
+
+        <!-- 生日自动匹配星座 -->
+        <div class="mt-2 text-center">
+          <button
+            v-if="!showBirthdayPicker"
+            class="text-xs text-indigo-500 hover:text-indigo-700 underline transition-colors"
+            @click="showBirthdayPicker = true"
+          >
+            {{ t('astrology.findByBirthday') }}
+          </button>
+          <div v-else class="flex items-center gap-1.5">
+            <select
+              v-model="birthMonth"
+              class="h-8 rounded border border-gray-300 bg-white px-2 text-xs text-gray-700 focus:border-indigo-400 focus:outline-none"
+              @change="tryMatchSign"
+            >
+              <option value="0" disabled>{{ t('astrology.birthMonth') }}</option>
+              <option v-for="m in 12" :key="m" :value="m">{{ m }}{{ locale === 'zh' ? '月' : '' }}</option>
+            </select>
+            <select
+              v-model="birthDay"
+              class="h-8 rounded border border-gray-300 bg-white px-2 text-xs text-gray-700 focus:border-indigo-400 focus:outline-none"
+              @change="tryMatchSign"
+            >
+              <option value="0" disabled>{{ t('astrology.birthDay') }}</option>
+              <option v-for="d in maxDay" :key="d" :value="d">{{ d }}{{ locale === 'zh' ? '日' : '' }}</option>
+            </select>
+            <button
+              class="shrink-0 text-xs text-gray-400 hover:text-gray-600"
+              :title="t('astrology.closePicker')"
+              @click="showBirthdayPicker = false"
+            >
+              ✕
+            </button>
+          </div>
+          <p
+            v-if="showBirthdayPicker && matchedSignName"
+            class="mt-1 text-xs text-indigo-600"
+          >
+            → {{ matchedSignName }}
+          </p>
+        </div>
       </div>
 
       <!-- 周期选择 -->
@@ -68,6 +110,73 @@ const emit = defineEmits<{
 const form = reactive({
   zodiacSign: '',
   period: '',
+})
+
+// ---- 生日自动匹配星座 ----
+const showBirthdayPicker = ref(false)
+const birthMonth = ref(0)
+const birthDay = ref(0)
+
+// 每月天数
+const daysInMonth = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+const maxDay = computed(() => {
+  const m = birthMonth.value
+  return m >= 1 && m <= 12 ? daysInMonth[m - 1] : 31
+})
+
+// 星座日期范围（与 zodiacSigns 顺序对应）
+const zodiacRanges = [
+  { start: [3, 21], end: [4, 19] },   // 白羊 Aries
+  { start: [4, 20], end: [5, 20] },   // 金牛 Taurus
+  { start: [5, 21], end: [6, 21] },   // 双子 Gemini
+  { start: [6, 22], end: [7, 22] },   // 巨蟹 Cancer
+  { start: [7, 23], end: [8, 22] },   // 狮子 Leo
+  { start: [8, 23], end: [9, 22] },   // 处女 Virgo
+  { start: [9, 23], end: [10, 23] },  // 天秤 Libra
+  { start: [10, 24], end: [11, 21] }, // 天蝎 Scorpio
+  { start: [11, 22], end: [12, 21] }, // 射手 Sagittarius
+  { start: [12, 22], end: [1, 19] },  // 摩羯 Capricorn (跨年)
+  { start: [1, 20], end: [2, 18] },   // 水瓶 Aquarius
+  { start: [2, 19], end: [3, 20] },   // 双鱼 Pisces
+]
+
+function findZodiacIndex(m: number, d: number): number {
+  for (let i = 0; i < zodiacRanges.length; i++) {
+    const { start, end } = zodiacRanges[i]
+    if (start[0] <= end[0]) {
+      // 同年区间 e.g. 3/21 - 4/19
+      if (
+        (m > start[0] || (m === start[0] && d >= start[1])) &&
+        (m < end[0] || (m === end[0] && d <= end[1]))
+      ) return i
+    } else {
+      // 跨年区间 e.g. 12/22 - 1/19（摩羯）
+      if (
+        (m > start[0] || (m === start[0] && d >= start[1])) ||
+        (m < end[0] || (m === end[0] && d <= end[1]))
+      ) return i
+    }
+  }
+  return -1
+}
+
+const matchedSignName = ref('')
+
+function tryMatchSign() {
+  if (birthMonth.value > 0 && birthDay.value > 0) {
+    const idx = findZodiacIndex(birthMonth.value, birthDay.value)
+    if (idx >= 0 && idx < zodiacSigns.value.length) {
+      form.zodiacSign = zodiacSigns.value[idx].value
+      matchedSignName.value = zodiacSigns.value[idx].label
+    }
+  }
+}
+
+// 手动选择星座时清除匹配提示
+watch(() => form.zodiacSign, () => {
+  if (showBirthdayPicker.value) {
+    matchedSignName.value = ''
+  }
 })
 
 // 星座数据：中英文 value 不同（value 会被发送给 AI）

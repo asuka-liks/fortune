@@ -58,6 +58,10 @@ const en: TranslationMap = {
   'astrology.periodMonthly': 'Monthly',
   'astrology.periodYearly': 'Yearly',
   'astrology.submit': 'View Horoscope',
+  'astrology.findByBirthday': "Don't know your sign? Find by birthday →",
+  'astrology.birthMonth': 'Month',
+  'astrology.birthDay': 'Day',
+  'astrology.closePicker': 'Close',
 
   // ==================== Tarot ====================
   'tarot.title': 'Tarot · Draw Cards',
