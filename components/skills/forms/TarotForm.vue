@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-4 rounded-xl border border-amber-200 bg-amber-50/50 p-4">
+  <div class="max-h-[55vh] space-y-4 overflow-y-auto rounded-xl border border-amber-200 bg-amber-50/50 p-4">
     <div class="flex items-center gap-2">
       <span class="text-lg">🃏</span>
       <span class="font-semibold text-gray-800">{{ t('tarot.title') }}</span>
