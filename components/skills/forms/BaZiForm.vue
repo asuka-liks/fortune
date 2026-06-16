@@ -115,9 +115,12 @@ const enTimeOptions = [
   { value: 'Hai Hour (21:00-23:00)', label: 'Hai Hour (21:00-23:00)' },
 ]
 
-const birthTimeOptions = computed(() =>
-  locale.value === 'en' ? enTimeOptions : zhTimeOptions,
-)
+const unknownTimeValue = computed(() => locale.value === 'en' ? 'Unknown' : '时辰未知')
+
+const birthTimeOptions = computed(() => {
+  const unknownOpt = { value: unknownTimeValue.value, label: t('bazi.unknownTime') }
+  return [unknownOpt, ...(locale.value === 'en' ? enTimeOptions : zhTimeOptions)]
+})
 
 const genderMaleValue = computed(() => locale.value === 'en' ? 'Male' : '男')
 const genderFemaleValue = computed(() => locale.value === 'en' ? 'Female' : '女')

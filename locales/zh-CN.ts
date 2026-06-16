@@ -44,6 +44,7 @@ const zhCN: TranslationMap = {
   'bazi.birthDate': '出生日期（公历）',
   'bazi.birthTime': '出生时辰',
   'bazi.selectTime': '请选择时辰',
+  'bazi.unknownTime': '不知道',
   'bazi.gender': '性别',
   'bazi.male': '♂ 男',
   'bazi.female': '♀ 女',

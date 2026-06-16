@@ -44,6 +44,7 @@ const en: TranslationMap = {
   'bazi.birthDate': 'Birth Date (Gregorian)',
   'bazi.birthTime': 'Birth Time (Chinese Hour)',
   'bazi.selectTime': 'Select time period',
+  'bazi.unknownTime': "I don't know",
   'bazi.gender': 'Gender',
   'bazi.male': '♂ Male',
   'bazi.female': '♀ Female',
