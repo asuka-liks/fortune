@@ -24,6 +24,7 @@ export default defineNuxtConfig({
       charset: 'utf-8',
       viewport: 'width=device-width, initial-scale=1',
       meta: [
+        { name: 'google-site-verification', content: 'googleb3a2d0bad1d5218a' },
         { name: 'description', content: SITE_DESC },
         // Open Graph (Facebook, LinkedIn, etc.)
         { property: 'og:type', content: 'website' },
