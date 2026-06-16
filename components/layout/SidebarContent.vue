@@ -113,9 +113,15 @@ function handleDelete(id: string) {
   }
 }
 
-// ---- 切换技能：只激活技能，等表单提交后再新建会话 ----
+// ---- 切换技能：点击已选模式取消，点击未选模式切换 ----
 function handleSelectSkill(id: SkillId) {
-  skillStore.activateSkill(id)
+  if (skillStore.activeSkillId === id) {
+    // 再次点击已激活的模式 → 取消选择
+    skillStore.deactivateSkill()
+  } else {
+    // 点击未激活的模式 → 切换并弹出表单
+    skillStore.activateSkill(id)
+  }
 }
 
 function handleNewChat() {
