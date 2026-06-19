@@ -1,5 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-const SITE_URL = process.env.NUXT_PUBLIC_SITE_URL || 'https://fortunetellor.vercel.app'
+const SITE_URL = process.env.NUXT_PUBLIC_SITE_URL || 'https://askoutsider.com/project/fortune'
 const SITE_NAME = 'AI Fortune Teller'
 const SITE_DESC = 'AI-powered fortune telling: BaZi (八字), Astrology (星座) & Tarot (塔罗). Free, bilingual (中文/English), streaming AI readings. | AI 算命 — 八字命理 · 星座运势 · 塔罗占卜，免费双语解读。'
 
@@ -19,6 +19,7 @@ export default defineNuxtConfig({
     },
   },
   app: {
+    baseURL: '/project/fortune/',
     head: {
       title: '🔮 AI Fortune Teller — BaZi · Astrology · Tarot | AI 算命',
       charset: 'utf-8',

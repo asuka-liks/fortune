@@ -15,7 +15,7 @@ RUN npm ci
 COPY . .
 
 # 构建时注入站点 URL（默认 Vercel 域名，部署到自己服务器时覆盖）
-ARG NUXT_PUBLIC_SITE_URL=https://fortunetellor.vercel.app
+ARG NUXT_PUBLIC_SITE_URL=https://askoutsider.com/project/fortune
 ENV NUXT_PUBLIC_SITE_URL=${NUXT_PUBLIC_SITE_URL}
 
 RUN npm run build
