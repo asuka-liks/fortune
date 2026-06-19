@@ -1,0 +1,28 @@
+# 依赖（构建时重新装）
+node_modules/
+
+# Git
+.git/
+.gitignore
+
+# 构建产物（服务器上重新 build）
+.output/
+.nuxt/
+dist/
+
+# 环境变量（运行时注入，不打包进镜像）
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# README
+README.md
+CLAUDE.md
