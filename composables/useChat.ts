@@ -17,7 +17,7 @@ export function useChat() {
   /** 从服务端查询当前 IP 的剩余对话次数 */
   async function fetchQuota(): Promise<void> {
     try {
-      const res = await fetch('/api/fortune/quota')
+      const res = await fetch('api/fortune/quota')
       if (res.ok) {
         const data = await res.json()
         // -1 表示付费用户（无限），用 Infinity 表示
@@ -83,7 +83,7 @@ export function useChat() {
     abortController = new AbortController()
 
     try {
-      const response = await fetch('/api/fortune/chat', {
+      const response = await fetch('api/fortune/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

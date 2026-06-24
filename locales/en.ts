@@ -29,6 +29,7 @@ const en: TranslationMap = {
   'chat.autoStartBazi': 'Start analysis',
   'chat.autoStartAstrology': 'View horoscope',
   'chat.autoStartTarot': 'Start reading',
+  'chat.autoStartBagua': 'Start divination',
 
   // ==================== Skill Selection ====================
   'skill.selectorTitle': 'Choose Fortune Type',
@@ -38,6 +39,8 @@ const en: TranslationMap = {
   'skill.astrology.desc': 'Daily, weekly, monthly, and yearly horoscope readings',
   'skill.tarot.name': 'Tarot Reading',
   'skill.tarot.desc': 'Draw tarot cards and receive insightful guidance',
+  'skill.bagua.name': 'Bagua (I Ching)',
+  'skill.bagua.desc': 'Coin divination with 64 hexagrams, Five Elements & Six Relations',
 
   // ==================== BaZi ====================
   'bazi.title': 'BaZi · Birth Info',
@@ -89,6 +92,24 @@ const en: TranslationMap = {
   'tarot.meaning': 'Meaning: ',
   'tarot.descLabel': 'Description: ',
   'tarot.clickFlip': 'Click to Reveal',
+
+  // ==================== Bagua (I Ching) ====================
+  'bagua.title': 'Bagua · Coin Divination',
+  'bagua.question': 'What do you want to ask? (Optional)',
+  'bagua.questionPlaceholder': 'e.g. How is my career developing?',
+  'bagua.shaking': 'Shaking coins...',
+  'bagua.startShake': '🔮 Shake Coins',
+  'bagua.shakeResult': 'Shake Results',
+  'bagua.shakeIndex': 'Shake {n}',
+  'bagua.changing': 'Changing',
+  'bagua.hexagramInfo': 'Hexagram Info',
+  'bagua.originalHexagram': 'Original',
+  'bagua.derivedHexagram': 'Derived',
+  'bagua.noDerived': 'None',
+  'bagua.changingLines': 'Changing Lines',
+  'bagua.lineNumbers': 'Line {lines}',
+  'bagua.noChangingLines': 'All six lines stable',
+  'bagua.startReading': 'Start Divination',
 
   // ==================== Errors ====================
   'error.createSession': 'Please create a conversation first',

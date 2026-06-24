@@ -29,6 +29,7 @@ const zhCN: TranslationMap = {
   'chat.autoStartBazi': '开始分析',
   'chat.autoStartAstrology': '查看运势',
   'chat.autoStartTarot': '开始解读',
+  'chat.autoStartBagua': '开始推算',
 
   // ==================== 技能选择 ====================
   'skill.selectorTitle': '选择算命类型',
@@ -38,6 +39,8 @@ const zhCN: TranslationMap = {
   'skill.astrology.desc': '十二星座每日、每周、每月、年度运势解读',
   'skill.tarot.name': '塔罗占卜',
   'skill.tarot.desc': '抽取塔罗牌，通过牌面解读为你指引方向',
+  'skill.bagua.name': '八卦五行',
+  'skill.bagua.desc': '铜钱摇卦，推演六十四卦，结合五行六亲推算',
 
   // ==================== 八字 ====================
   'bazi.title': '八字命理 · 出生信息',
@@ -89,6 +92,24 @@ const zhCN: TranslationMap = {
   'tarot.meaning': '含义：',
   'tarot.descLabel': '描述：',
   'tarot.clickFlip': '点击翻牌',
+
+  // ==================== 八卦五行 ====================
+  'bagua.title': '八卦五行 · 铜钱摇卦',
+  'bagua.question': '你想问什么？（可选）',
+  'bagua.questionPlaceholder': '例如：最近的事业发展如何？',
+  'bagua.shaking': '摇卦中...',
+  'bagua.startShake': '🔮 一键摇卦',
+  'bagua.shakeResult': '摇卦结果',
+  'bagua.shakeIndex': '第{n}摇',
+  'bagua.changing': '动爻',
+  'bagua.hexagramInfo': '卦象信息',
+  'bagua.originalHexagram': '本卦',
+  'bagua.derivedHexagram': '变卦',
+  'bagua.noDerived': '无变卦',
+  'bagua.changingLines': '动爻',
+  'bagua.lineNumbers': '第{lines}爻',
+  'bagua.noChangingLines': '六爻皆静，无动爻',
+  'bagua.startReading': '开始推算',
 
   // ==================== 错误 ====================
   'error.createSession': '请先创建一个对话会话',

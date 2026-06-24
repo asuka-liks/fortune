@@ -14,6 +14,10 @@
         v-else-if="skillStore.activeSkillId === 'tarot'"
         @submit="handleSkillSubmit"
       />
+      <BaguaForm
+        v-else-if="skillStore.activeSkillId === 'bagua'"
+        @submit="handleSkillSubmit"
+      />
     </div>
 
     <!-- 聊天容器 -->
@@ -68,6 +72,7 @@ const autoStartKeys: Record<string, string> = {
   bazi: 'chat.autoStartBazi',
   astrology: 'chat.autoStartAstrology',
   tarot: 'chat.autoStartTarot',
+    bagua: 'chat.autoStartBagua',
 }
 
 function handleSkillSubmit(context: Record<string, string>) {

@@ -1,5 +1,5 @@
 /** 技能唯一标识 */
-export type SkillId = 'bazi' | 'astrology' | 'tarot'
+export type SkillId = 'bazi' | 'astrology' | 'tarot' | 'bagua'
 
 /** 技能输入字段定义 */
 export interface SkillInputField {
