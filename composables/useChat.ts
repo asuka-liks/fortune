@@ -1,4 +1,5 @@
 import type { ChatMessage } from '~/types/chat'
+import { generateUUID } from '~/utils/uuid'
 
 export function useChat() {
   const chatStore = useChatStore()
@@ -51,7 +52,7 @@ export function useChat() {
 
     // 添加用户消息
     const userMsg: ChatMessage = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       role: 'user',
       content: text,
       timestamp: Date.now(),
@@ -62,7 +63,7 @@ export function useChat() {
 
     // 创建 AI 消息占位
     const assistantMsg: ChatMessage = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       role: 'assistant',
       content: '',
       timestamp: Date.now(),
