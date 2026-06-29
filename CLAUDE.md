@@ -44,10 +44,12 @@ git push origin feature/new-feature
 |------|------|----------|--------|
 | **fortune** | `git@github.com:asuka-liks/fortune.git` | `askoutsider.com/project/fortune/` | Nuxt 3 + Docker |
 | **askoutsider** | `git@github.com:asuka-liks/askoutsider.git` | `askoutsider.com/` | React + Vite |
+| **imitator** | `git@github.com:asuka-liks/imitator.git` | `askoutsider.com/project/imitator/` | Express + 原生前端 + Docker |
 
-两个项目部署在同一台服务器上，Nginx 统一路由：
+三个项目部署在同一台服务器上，Nginx 统一路由：
 - `/` → askoutsider 静态文件 (`dist/`)
 - `/project/fortune/` → fortune Docker 容器 (`127.0.0.1:3000`)
+- `/project/imitator/` → imitator Docker 容器 (`127.0.0.1:3001`)
 
 ---
 
@@ -81,14 +83,26 @@ cd /root/fortune && git pull && docker build -t fortune . && docker stop fortune
 ```
 > 修改 `nuxt.config.ts` 或 `Dockerfile` 时需要重建镜像
 
+**imitator 项目（模仿吵架大师）**：
+```bash
+cd /root/imitator && git pull && docker build -t imitator . && docker stop imitator && docker rm imitator && docker run -d --name imitator --env-file .env -p 3001:3001 --restart unless-stopped imitator
+```
+> 修改 `server.js`、`Dockerfile` 或 `public/` 下的文件时需要重建镜像
+
 **Nginx 配置文件**：`/etc/nginx/sites-available/askoutsider`
 ```bash
 nginx -t && systemctl restart nginx  # 验证并重载 Nginx
 ```
 
+**SSL 证书**：`/etc/nginx/ssl/`（阿里云免费 DV，90 天有效期）
+- `www.askoutsider.com.pem` — 证书文件
+- `www.askoutsider.com.key` — 私钥文件
+> 到期后需在阿里云重新申请，上传替换后 `systemctl restart nginx`
+
 **查看日志**：
 ```bash
 docker logs fortune --tail 50        # fortune 容器日志
+docker logs imitator --tail 50       # imitator 容器日志
 tail -50 /var/log/nginx/error.log   # Nginx 错误日志
 ```
 
