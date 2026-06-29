@@ -78,7 +78,7 @@ const emit = defineEmits<{
 }>()
 
 const form = reactive({
-  birthDate: '',
+  birthDate: '2004-01-01',
   birthTime: '',
   gender: '',
 })
