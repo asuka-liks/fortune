@@ -10,7 +10,7 @@ import { z } from 'zod'
 // 请求体校验 schema
 const chatRequestSchema = z.object({
   skillId: z.enum(['bazi', 'astrology', 'tarot', 'bagua', 'fun']),
-  context: z.record(z.string(), z.string().max(5000)).optional().default({}),
+  context: z.record(z.string().max(5000)).optional().default({}),
   messages: z.array(
     z.object({
       role: z.enum(['user', 'assistant']),
