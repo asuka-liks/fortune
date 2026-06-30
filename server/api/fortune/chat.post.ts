@@ -35,7 +35,7 @@ export default defineEventHandler(async (event) => {
   if (!canStartConversation(ip as string)) {
     throw createError({
       statusCode: 402,
-      statusMessage: '免费对话次数已用完，敬请期待付费功能',
+      statusMessage: '免费对话次数已用完，敬请期待更新',
     })
   }
 

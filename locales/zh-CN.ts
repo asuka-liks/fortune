@@ -20,7 +20,7 @@ const zhCN: TranslationMap = {
   'chat.inputPlaceholder': '输入你的问题...',
   'chat.selectSkillFirst': '请先在左侧选择一种算命方式',
   'chat.quotaRemaining': '🔮 剩余 {n} 次免费对话',
-  'chat.quotaExhausted': '🚫 免费次数已用完，敬请期待付费功能',
+  'chat.quotaExhausted': '🚫 免费次数已用完，敬请期待更新',
   'chat.quotaExhaustedShort': '免费次数已用完',
   'chat.send': '发送',
   'chat.stop': '停止',
@@ -127,7 +127,7 @@ const zhCN: TranslationMap = {
   // ==================== 错误 ====================
   'error.createSession': '请先创建一个对话会话',
   'error.selectSkill': '请先选择一种算命方式',
-  'error.quotaExhausted': '免费对话次数已用完，敬请期待付费功能',
+  'error.quotaExhausted': '免费对话次数已用完，敬请期待更新',
   'error.retry': '请求失败，请重试',
 }
 
