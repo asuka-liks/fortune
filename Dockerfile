@@ -23,10 +23,18 @@ RUN npm run build
 # ── 阶段 2️⃣：运行 ──────────────────────────────────────────
 FROM node:22-alpine
 
+# 创建非 root 用户，防止容器被攻破后提权到宿主机
+RUN addgroup -S fortune && adduser -S fortune -G fortune
+
 WORKDIR /app
 
 # 只复制构建产物，不包含源码 / node_modules / .git
 COPY --from=build /app/.output ./.output
+
+# 文件归属给 fortune 用户
+RUN chown -R fortune:fortune ./.output
+
+USER fortune
 
 EXPOSE 3000
 
