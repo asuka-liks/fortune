@@ -41,7 +41,7 @@
               @change="tryMatchSign"
             >
               <option value="0" disabled>{{ t('astrology.birthMonth') }}</option>
-              <option v-for="m in 12" :key="m" :value="m">{{ m }}{{ locale === 'zh' ? '月' : '' }}</option>
+              <option v-for="m in 12" :key="m" :value="m">{{ m }}{{ locale === 'zh-CN' ? '月' : '' }}</option>
             </select>
             <select
               v-model="birthDay"
@@ -49,7 +49,7 @@
               @change="tryMatchSign"
             >
               <option value="0" disabled>{{ t('astrology.birthDay') }}</option>
-              <option v-for="d in maxDay" :key="d" :value="d">{{ d }}{{ locale === 'zh' ? '日' : '' }}</option>
+              <option v-for="d in maxDay" :key="d" :value="d">{{ d }}{{ locale === 'zh-CN' ? '日' : '' }}</option>
             </select>
             <button
               class="shrink-0 text-xs text-gray-400 hover:text-gray-600"
