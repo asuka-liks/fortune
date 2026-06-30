@@ -5,18 +5,34 @@ import {
   incrementConversation,
 } from '~/server/services/ai/rate-limiter'
 import { getSkill } from '~/config/skills'
-import type { ChatRequest } from '~/types/chat'
+import { z } from 'zod'
+
+// 请求体校验 schema
+const chatRequestSchema = z.object({
+  skillId: z.enum(['bazi', 'astrology', 'tarot', 'bagua', 'fun']),
+  context: z.record(z.string(), z.string().max(5000)).optional().default({}),
+  messages: z.array(
+    z.object({
+      role: z.enum(['user', 'assistant']),
+      content: z.string().min(1).max(10000),
+    }),
+  ).min(1).max(40),
+  provider: z.enum(['qwen', 'deepseek']).optional().default('deepseek'),
+  locale: z.enum(['zh-CN', 'en']).optional().default('zh-CN'),
+})
 
 export default defineEventHandler(async (event) => {
-  // 1. 解析请求体
-  const body = await readBody<ChatRequest>(event)
-
-  if (!body?.skillId || !body?.messages?.length) {
+  // 1. 解析并校验请求体
+  const rawBody = await readBody(event)
+  const parsed = chatRequestSchema.safeParse(rawBody)
+  if (!parsed.success) {
+    const firstIssue = parsed.error.issues[0]
     throw createError({
       statusCode: 400,
-      statusMessage: '缺少必要参数: skillId 或 messages',
+      statusMessage: `请求参数错误: ${firstIssue.path.join('.')} - ${firstIssue.message}`,
     })
   }
+  const body = parsed.data
 
   // 2. 获取 IP
   const ip = getHeader(event, 'x-forwarded-for')
