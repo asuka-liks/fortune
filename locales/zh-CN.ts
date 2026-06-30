@@ -30,6 +30,7 @@ const zhCN: TranslationMap = {
   'chat.autoStartAstrology': '查看运势',
   'chat.autoStartTarot': '开始解读',
   'chat.autoStartBagua': '开始推算',
+  'chat.autoStartFun': '开始解读',
 
   // ==================== 技能选择 ====================
   'skill.selectorTitle': '选择算命类型',
@@ -41,6 +42,8 @@ const zhCN: TranslationMap = {
   'skill.tarot.desc': '抽取塔罗牌，通过牌面解读为你指引方向',
   'skill.bagua.name': '八卦五行',
   'skill.bagua.desc': '铜钱摇卦，推演六十四卦，结合五行六亲推算',
+  'skill.fun.name': '趣味占卜',
+  'skill.fun.desc': '三国杀卡牌 + 梅花易数，强行串联解读，纯属娱乐',
 
   // ==================== 八字 ====================
   'bazi.title': '八字命理 · 出生信息',
@@ -110,6 +113,16 @@ const zhCN: TranslationMap = {
   'bagua.lineNumbers': '第{lines}爻',
   'bagua.noChangingLines': '六爻皆静，无动爻',
   'bagua.startReading': '开始推算',
+
+  // ==================== 趣味占卜 ====================
+  'fun.title': '🎴 趣味占卜 · 三国杀卡牌',
+  'fun.question': '你想问什么？（可选）',
+  'fun.questionPlaceholder': '例如：我该不该去找他复合？',
+  'fun.drawing': '抽牌中...',
+  'fun.startDraw': '🃏 抽牌',
+  'fun.drawResult': '抽牌结果',
+  'fun.hexagram': '卦象',
+  'fun.startReading': '开始解读',
 
   // ==================== 错误 ====================
   'error.createSession': '请先创建一个对话会话',

@@ -18,6 +18,10 @@
         v-else-if="skillStore.activeSkillId === 'bagua'"
         @submit="handleSkillSubmit"
       />
+      <FunForm
+        v-else-if="skillStore.activeSkillId === 'fun'"
+        @submit="handleSkillSubmit"
+      />
     </div>
 
     <!-- 聊天容器 -->
@@ -73,6 +77,7 @@ const autoStartKeys: Record<string, string> = {
   astrology: 'chat.autoStartAstrology',
   tarot: 'chat.autoStartTarot',
     bagua: 'chat.autoStartBagua',
+    fun: 'chat.autoStartFun',
 }
 
 function handleSkillSubmit(context: Record<string, string>) {

@@ -66,4 +66,5 @@ export interface SkillContext {
   astrology?: AstrologyInput
   tarot?: TarotDrawResult
   bagua?: BaguaShakeResult
+  fun?: Record<string, string>
 }

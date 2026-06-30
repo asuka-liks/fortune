@@ -30,6 +30,7 @@ const en: TranslationMap = {
   'chat.autoStartAstrology': 'View horoscope',
   'chat.autoStartTarot': 'Start reading',
   'chat.autoStartBagua': 'Start divination',
+  'chat.autoStartFun': 'Start reading',
 
   // ==================== Skill Selection ====================
   'skill.selectorTitle': 'Choose Fortune Type',
@@ -41,6 +42,8 @@ const en: TranslationMap = {
   'skill.tarot.desc': 'Draw tarot cards and receive insightful guidance',
   'skill.bagua.name': 'Bagua (I Ching)',
   'skill.bagua.desc': 'Coin divination with 64 hexagrams, Five Elements & Six Relations',
+  'skill.fun.name': 'Fun Divination',
+  'skill.fun.desc': 'Three Kingdoms Kill cards + Plum Blossom I Ching, forced interpretation for fun',
 
   // ==================== BaZi ====================
   'bazi.title': 'BaZi · Birth Info',
@@ -110,6 +113,16 @@ const en: TranslationMap = {
   'bagua.lineNumbers': 'Line {lines}',
   'bagua.noChangingLines': 'All six lines stable',
   'bagua.startReading': 'Start Divination',
+
+  // ==================== Fun Divination ====================
+  'fun.title': '🎴 Fun Divination · Three Kingdoms Kill',
+  'fun.question': 'What do you want to ask? (Optional)',
+  'fun.questionPlaceholder': 'e.g. Should I get back with my ex?',
+  'fun.drawing': 'Drawing...',
+  'fun.startDraw': '🃏 Draw Cards',
+  'fun.drawResult': 'Draw Results',
+  'fun.hexagram': 'Hexagram',
+  'fun.startReading': 'Start Reading',
 
   // ==================== Errors ====================
   'error.createSession': 'Please create a conversation first',

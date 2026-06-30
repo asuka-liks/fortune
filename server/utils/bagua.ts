@@ -407,3 +407,189 @@ function getTrigramCode(name: string): string {
   }
   return map[name] ?? '000'
 }
+
+// ============================================================
+// 数字起卦（梅花易数）
+// ============================================================
+
+/** 先天八卦数 → 卦名 */
+const XIANTIAN_NUMBER_TO_TRIGRAM: Record<number, string> = {
+  1: '乾', 2: '兑', 3: '离', 4: '震',
+  5: '巽', 6: '坎', 7: '艮', 8: '坤',
+}
+
+/** 卦名 → 爻线数组（从下往上，true=阳，false=阴） */
+const TRIGRAM_LINES: Record<string, boolean[]> = {
+  '乾': [true, true, true],    // ☰
+  '兑': [true, true, false],   // ☱
+  '离': [true, false, true],   // ☲
+  '震': [true, false, false],  // ☳
+  '巽': [false, true, true],   // ☴
+  '坎': [false, true, false],  // ☵
+  '艮': [false, false, true],  // ☶
+  '坤': [false, false, false], // ☷
+}
+
+/** 根据三爻线反查卦名 */
+function getTrigramByLines(lines: boolean[]): string {
+  const key = lines.map(l => l ? '1' : '0').join('')
+  const map: Record<string, string> = {
+    '111': '乾', '110': '兑', '101': '离', '100': '震',
+    '011': '巽', '010': '坎', '001': '艮', '000': '坤',
+  }
+  return map[key] ?? '坤'
+}
+
+/** 数字起卦结果 */
+export interface PointDerivedHexagram {
+  point1: number
+  point2: number
+  upperTrigram: string
+  lowerTrigram: string
+  upperTrigramCalc: string  // 计算过程描述
+  lowerTrigramCalc: string
+  changingLine: number       // 0 = 无动爻
+  changingLineCalc: string
+  originalHexagram: HexagramData
+  derivedHexagram: HexagramData | null
+  intergram: HexagramData | null  // 互卦
+  interLower: string
+  interUpper: string
+}
+
+/**
+ * 根据两张牌的点数起卦
+ * @param a 第一张点数 → 上卦
+ * @param b 第二张点数 → 下卦
+ * @returns 完整卦象信息
+ */
+export function deriveByPoints(a: number, b: number): PointDerivedHexagram {
+  // 除8取余，余0则为坤(8)
+  const upperRemainder = a % 8
+  const upperNum = upperRemainder === 0 ? 8 : upperRemainder
+  const lowerRemainder = b % 8
+  const lowerNum = lowerRemainder === 0 ? 8 : lowerRemainder
+
+  const upperTrigram = XIANTIAN_NUMBER_TO_TRIGRAM[upperNum]
+  const lowerTrigram = XIANTIAN_NUMBER_TO_TRIGRAM[lowerNum]
+
+  const upperTrigramCalc = upperRemainder === 0
+    ? `${a}÷8 整除 → 余0 → 8=坤`
+    : `${a}÷8 余${upperRemainder} → ${upperNum}=${upperTrigram}`
+  const lowerTrigramCalc = lowerRemainder === 0
+    ? `${b}÷8 整除 → 余0 → 8=坤`
+    : `${b}÷8 余${lowerRemainder} → ${lowerNum}=${lowerTrigram}`
+
+  // 查本卦
+  const origKey = `${lowerTrigram}_${upperTrigram}`
+  const originalHexagram = hexagramByTrigrams.get(origKey)
+  if (!originalHexagram) {
+    throw new Error(`找不到卦：下${lowerTrigram}上${upperTrigram}`)
+  }
+
+  // 动爻：两数之和 ÷ 6 取余
+  const sum = a + b
+  const changeRemainder = sum % 6
+  const changingLine = changeRemainder === 0 ? 6 : changeRemainder
+  const changingLineCalc = changeRemainder === 0
+    ? `(${a}+${b})÷6 整除 → 6爻动`
+    : `(${a}+${b})÷6 余${changeRemainder} → ${changingLine}爻动`
+
+  // 变卦
+  let derivedHexagram: HexagramData | null = null
+  if (changingLine > 0) {
+    // 构建本卦 6 爻
+    const lines = buildHexagramLines(lowerTrigram, upperTrigram)
+    // 翻转动爻（1-based → 0-based index）
+    lines[changingLine - 1] = !lines[changingLine - 1]
+    // 新的上下卦
+    const newLower = getTrigramByLines(lines.slice(0, 3))
+    const newUpper = getTrigramByLines(lines.slice(3, 6))
+    const dKey = `${newLower}_${newUpper}`
+    derivedHexagram = hexagramByTrigrams.get(dKey) ?? null
+  }
+
+  // 互卦：本卦的 2,3,4 爻为下卦，3,4,5 爻为上卦
+  const origLines = buildHexagramLines(lowerTrigram, upperTrigram)
+  const interLower = getTrigramByLines([origLines[1], origLines[2], origLines[3]])   // 爻2,3,4
+  const interUpper = getTrigramByLines([origLines[2], origLines[3], origLines[4]])   // 爻3,4,5
+  const iKey = `${interLower}_${interUpper}`
+  const intergram = hexagramByTrigrams.get(iKey) ?? null
+
+  return {
+    point1: a,
+    point2: b,
+    upperTrigram,
+    lowerTrigram,
+    upperTrigramCalc,
+    lowerTrigramCalc,
+    changingLine,
+    changingLineCalc,
+    originalHexagram,
+    derivedHexagram,
+    intergram,
+    interLower,
+    interUpper,
+  }
+}
+
+/** 根据上下卦名构建 6 爻线 */
+function buildHexagramLines(lower: string, upper: string): boolean[] {
+  const lowerLines = TRIGRAM_LINES[lower]
+  const upperLines = TRIGRAM_LINES[upper]
+  if (!lowerLines || !upperLines) {
+    throw new Error(`未知卦名：下${lower}上${upper}`)
+  }
+  return [...lowerLines, ...upperLines]
+}
+
+/** 格式化数字起卦结果为 AI prompt 文本 */
+export function formatPointHexagram(result: PointDerivedHexagram, locale: string = 'zh-CN'): string {
+  const isEn = locale === 'en'
+
+  if (isEn) {
+    const { point1, point2, upperTrigramCalc, lowerTrigramCalc, changingLineCalc,
+      originalHexagram, derivedHexagram, intergram, interLower, interUpper } = result
+
+    const derivInfo = derivedHexagram
+      ? `\n\n## Derived Hexagram (变卦)\n**${derivedHexagram.nameCN} (${derivedHexagram.name})**\nUpper: ${derivedHexagram.upperTrigram}, Lower: ${derivedHexagram.lowerTrigram}\n${derivedHexagram.descriptionEn}\nJudgment: ${derivedHexagram.judgmentEn}`
+      : '\n\n## Derived Hexagram\nNone'
+
+    const interInfo = intergram
+      ? `\n\n## Mutual Hexagram (互卦)\n**${intergram.nameCN} (${intergram.name})**\nLower mutual: ${interLower} (lines 2,3,4) | Upper mutual: ${interUpper} (lines 3,4,5)\n${intergram.descriptionEn}`
+      : ''
+
+    return `## Plum Blossom I Ching (梅花易数)
+Card 1 (point ${point1}): ${upperTrigramCalc} → Upper Trigram
+Card 2 (point ${point2}): ${lowerTrigramCalc} → Lower Trigram
+Sum: ${changingLineCalc}
+
+## Original Hexagram (本卦)
+**${originalHexagram.nameCN} (${originalHexagram.name})**
+Upper: ${originalHexagram.upperTrigram} · Lower: ${originalHexagram.lowerTrigram}
+${originalHexagram.descriptionEn}
+Judgment: ${originalHexagram.judgmentEn}${derivInfo}${interInfo}`
+  }
+
+  const { point1, point2, upperTrigramCalc, lowerTrigramCalc, changingLineCalc,
+    originalHexagram, derivedHexagram, intergram, interLower, interUpper } = result
+
+  const derivInfo = derivedHexagram
+    ? `\n\n## 变卦（之卦）\n**${derivedHexagram.nameCN}**（${derivedHexagram.name}）\n上卦${derivedHexagram.upperTrigram}下卦${derivedHexagram.lowerTrigram}\n${derivedHexagram.description}\n卦辞：${derivedHexagram.judgment}`
+    : '\n\n## 变卦\n无动爻'
+
+  const interInfo = intergram
+    ? `\n\n## 互卦\n**${intergram.nameCN}**（${intergram.name}）\n下互：${interLower}（2,3,4爻）| 上互：${interUpper}（3,4,5爻）\n${intergram.description}`
+    : ''
+
+  return `## 梅花易数起卦
+第一张牌点数 ${point1}：${upperTrigramCalc} → 上卦
+第二张牌点数 ${point2}：${lowerTrigramCalc} → 下卦
+两数之和：${changingLineCalc}
+
+## 本卦
+**${originalHexagram.nameCN}**（${originalHexagram.name}）
+上卦${originalHexagram.upperTrigram} · 下卦${originalHexagram.lowerTrigram}
+${originalHexagram.description}
+卦辞：${originalHexagram.judgment}${derivInfo}${interInfo}`
+}
