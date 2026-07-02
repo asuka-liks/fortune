@@ -25,5 +25,6 @@
 
 <script setup lang="ts">
 const { t } = useI18n()
-const beianIcon = new URL('/beian.png', import.meta.url).href
+const config = useRuntimeConfig()
+const beianIcon = `${config.app.baseURL}beian.png`
 </script>
