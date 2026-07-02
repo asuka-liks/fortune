@@ -1,7 +1,7 @@
 /**
  * 内存限流器
  * - 每个 IP 每分钟最多 10 次请求（防滥用）
- * - 每个 IP 总共只有 3 次免费对话（付费后无限制）
+ * - 每个 IP 每天 5 次免费对话（UTC+8 零点重置，付费后无限制）
  * - 付费预留接口：markPaid(ip)
  *
  * TODO: 生产环境应换成 Redis，避免多实例/重启丢失数据
@@ -13,8 +13,11 @@ interface IpEntry {
   /** 当前分钟窗口的结束时间戳 */
   minuteResetAt: number
 
-  /** 累计对话次数（付费后清零或不再检查） */
-  conversationCount: number
+  /** 当天对话次数 */
+  dailyCount: number
+  /** 当天窗口的结束时间戳（UTC+8 次日零点） */
+  dayResetAt: number
+
   /** 是否为付费用户 */
   isPaid: boolean
 }
@@ -24,8 +27,20 @@ const store = new Map<string, IpEntry>()
 const MAX_REQUESTS_PER_MINUTE = 10
 const MINUTE_WINDOW_MS = 60_000
 
-/** 免费对话次数上限 */
-const MAX_FREE_CONVERSATIONS = 3
+/** 免费对话每天次数上限 */
+const MAX_FREE_CONVERSATIONS = 5
+
+/** 返回 UTC+8 次日零点的 Unix 时间戳（毫秒） */
+function getNextMidnightCST(): number {
+  const now = new Date()
+  // UTC+8 = 北京时间
+  const cstNow = new Date(now.getTime() + 8 * 3600_000)
+  const cstMidnight = new Date(
+    Date.UTC(cstNow.getUTCFullYear(), cstNow.getUTCMonth(), cstNow.getUTCDate() + 1)
+  )
+  // midnight UTC → CST 次日 00:00 对应的 UTC 时间戳
+  return cstMidnight.getTime() - 8 * 3600_000
+}
 
 // ==================== 每分钟限流 ====================
 
@@ -61,7 +76,9 @@ export function canStartConversation(ip: string): boolean {
   const entry = store.get(ip)
   if (!entry) return true
   if (entry.isPaid) return true
-  return entry.conversationCount < MAX_FREE_CONVERSATIONS
+  // 新的一天，重置计数
+  if (Date.now() > entry.dayResetAt) return true
+  return entry.dailyCount < MAX_FREE_CONVERSATIONS
 }
 
 /** 对话完成后扣减次数。返回剩余免费次数（付费用户返回 -1 表示无限）。 */
@@ -75,8 +92,16 @@ export function incrementConversation(ip: string): number {
   // 付费用户不计数
   if (entry.isPaid) return -1
 
-  entry.conversationCount++
-  return Math.max(0, MAX_FREE_CONVERSATIONS - entry.conversationCount)
+  // 新的一天，重置计数
+  const now = Date.now()
+  if (now > entry.dayResetAt) {
+    entry.dailyCount = 1
+    entry.dayResetAt = getNextMidnightCST()
+    return Math.max(0, MAX_FREE_CONVERSATIONS - entry.dailyCount)
+  }
+
+  entry.dailyCount++
+  return Math.max(0, MAX_FREE_CONVERSATIONS - entry.dailyCount)
 }
 
 /** 获取 IP 的剩余信息 */
@@ -92,8 +117,12 @@ export function getQuota(ip: string): {
   if (entry.isPaid) {
     return { remaining: -1, total: MAX_FREE_CONVERSATIONS, isPaid: true }
   }
+  // 新的一天，计数归零
+  if (Date.now() > entry.dayResetAt) {
+    return { remaining: MAX_FREE_CONVERSATIONS, total: MAX_FREE_CONVERSATIONS, isPaid: false }
+  }
   return {
-    remaining: Math.max(0, MAX_FREE_CONVERSATIONS - entry.conversationCount),
+    remaining: Math.max(0, MAX_FREE_CONVERSATIONS - entry.dailyCount),
     total: MAX_FREE_CONVERSATIONS,
     isPaid: false,
   }
@@ -117,16 +146,17 @@ function createEntry(now: number): IpEntry {
   return {
     minuteCount: 1,
     minuteResetAt: now + MINUTE_WINDOW_MS,
-    conversationCount: 0,
+    dailyCount: 0,
+    dayResetAt: getNextMidnightCST(),
     isPaid: false,
   }
 }
 
 // ==================== 定时清理 ====================
 
-/** 清理超过 1 小时未活动的 IP 条目，防止内存泄漏 */
+/** 清理超过 25 小时未活动的 IP 条目，防止内存泄漏（跨天保留） */
 setInterval(() => {
-  const cutoff = Date.now() - 3_600_000 // 1 小时前
+  const cutoff = Date.now() - 90_000_000 // 25 小时前
   for (const [ip, entry] of store.entries()) {
     if (entry.minuteResetAt < cutoff) {
       store.delete(ip)
