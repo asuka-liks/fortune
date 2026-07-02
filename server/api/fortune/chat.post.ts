@@ -5,6 +5,8 @@ import {
   incrementConversation,
 } from '~/server/services/ai/rate-limiter'
 import { getSkill } from '~/config/skills'
+import { searchWiki, formatWikiContext } from '~/server/knowledge/search'
+import { tryAutoIngest } from '~/server/knowledge/ingest'
 import { z } from 'zod'
 
 // 请求体校验 schema
@@ -55,7 +57,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // 3. 加载技能定义
+  // 5. 加载技能定义
   const skill = getSkill(body.skillId)
   if (!skill) {
     throw createError({
@@ -64,7 +66,7 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  // 4. 构建系统提示词（根据语言选择）
+  // 6. 构建系统提示词（根据语言选择）
   const locale = body.locale ?? 'zh-CN'
   const rawPrompt = (locale === 'en' && skill.systemPromptEn)
     ? skill.systemPromptEn
@@ -75,18 +77,29 @@ export default defineEventHandler(async (event) => {
   }
   systemPrompt = systemPrompt.replaceAll(/{{[^}]+}}/g, locale === 'en' ? '(not provided)' : '(未提供)')
 
-  // 5. 构建完整的 messages 数组
+  // 7. 检索 wiki 知识库（失败不影响主流程）
+  const userQuery = body.messages[body.messages.length - 1]?.content ?? ''
+  let retrievedPages: { name: string; body: string }[] = []
+  let wikiContext = ''
+  try {
+    retrievedPages = searchWiki(userQuery, body.skillId, 3)
+    wikiContext = formatWikiContext(retrievedPages)
+  } catch (err: any) {
+    console.error('[WikiSearch] 检索失败（不影响对话）:', err.message)
+  }
+
+  // 8. 构建完整的 messages 数组（system prompt + wiki 知识 + 对话历史）
   const messages = [
-    { role: 'system', content: systemPrompt },
+    { role: 'system', content: systemPrompt + wikiContext },
     ...body.messages,
   ]
 
-  // 6. 选择 AI 供应商并创建客户端
+  // 9. 选择 AI 供应商并创建客户端
   const provider = body.provider ?? 'deepseek'
   const model = getDefaultModel(provider)
   const client = createAIClient(provider)
 
-  // 7. 创建 SSE 流
+  // 10. 创建 SSE 流
   const eventStream = createEventStream(event)
 
   try {
@@ -111,6 +124,16 @@ export default defineEventHandler(async (event) => {
         incrementConversation(ip as string)
         await eventStream.push('__DONE__')
         await eventStream.close()
+
+        // 11. 异步分析对话，自动收录新知识到 wiki（fire-and-forget）
+        tryAutoIngest(
+          body.messages,
+          body.skillId,
+          retrievedPages,
+          provider,
+        ).catch((err: any) => {
+          console.error('[WikiIngest] 自动收录异常:', err.message)
+        })
       } catch (err: any) {
         await eventStream.push(`[错误] ${err.message}`)
         await eventStream.close()

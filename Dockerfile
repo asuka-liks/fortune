@@ -31,6 +31,9 @@ WORKDIR /app
 # 只复制构建产物，不包含源码 / node_modules / .git
 COPY --from=build /app/.output ./.output
 
+# 复制 wiki 知识库文件（运行时检索和 ingest 需要）
+COPY --from=build /app/server/knowledge/wiki ./.output/server/knowledge/wiki
+
 # 文件归属给 fortune 用户
 RUN chown -R fortune:fortune ./.output
 
