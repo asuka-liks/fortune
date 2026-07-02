@@ -99,7 +99,7 @@ const zhCN: TranslationMap = {
   // ==================== 八卦五行 ====================
   'bagua.title': '八卦五行 · 铜钱摇卦',
   'bagua.question': '你想问什么？（可选）',
-  'bagua.questionPlaceholder': '例如：最近的事业发展如何？',
+  'bagua.questionPlaceholder': '例如：我的生辰八字是甲申丁卯癸巳甲寅，最近事业发展如何？',
   'bagua.shaking': '摇卦中...',
   'bagua.startShake': '🔮 一键摇卦',
   'bagua.shakeResult': '摇卦结果',

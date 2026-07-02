@@ -99,7 +99,7 @@ const en: TranslationMap = {
   // ==================== Bagua (I Ching) ====================
   'bagua.title': 'Bagua · Coin Divination',
   'bagua.question': 'What do you want to ask? (Optional)',
-  'bagua.questionPlaceholder': 'e.g. How is my career developing?',
+  'bagua.questionPlaceholder': 'e.g. My birth chart is Jia-Shen Ding-Mao Gui-Si Jia-Yin, how is my career developing?',
   'bagua.shaking': 'Shaking coins...',
   'bagua.startShake': '🔮 Shake Coins',
   'bagua.shakeResult': 'Shake Results',
