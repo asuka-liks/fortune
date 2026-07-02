@@ -16,7 +16,7 @@
         rel="noreferrer"
         class="flex items-center gap-1 hover:text-gray-500 transition-colors"
       >
-        <img src="/beian.png" alt="公安备案" class="w-3 h-3" />
+        <img :src="beianIcon" alt="公安备案" class="w-3 h-3" />
         苏公网安备32021402004828号
       </a>
     </div>
@@ -25,4 +25,5 @@
 
 <script setup lang="ts">
 const { t } = useI18n()
+const beianIcon = new URL('/beian.png', import.meta.url).href
 </script>
