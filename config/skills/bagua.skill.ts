@@ -49,7 +49,7 @@ export const baguaSkill: SkillDefinition = {
       label: '你想问什么？（可选）',
       type: 'text',
       required: false,
-      placeholder: '例如：最近的事业发展如何？',
+      placeholder: '例如：我的生辰八字是甲申丁卯癸巳甲寅，最近事业发展如何？',
     },
   ],
 
