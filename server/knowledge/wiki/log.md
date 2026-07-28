@@ -111,3 +111,10 @@ Overview（综述）：
 **影响范围**：首次 Ingest，wiki/ 从空仓启动
 
 **操作者**：Claude Code（Askoutsider 确认后执行）
+
+## [2026-07-28 05:39] ingest | Fortune对话 → wiki/concepts/概念_三国杀卡牌与梅花易数融合占卜法.md
+
+**收录内容**：
+- 三国杀卡牌与梅花易数融合占卜法（新见解）
+
+**交叉引用**：wiki/卡牌占卜符号映射.md、wiki/数字起卦与梅花易数.md、wiki/三国杀占卜.md
