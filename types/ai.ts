@@ -7,6 +7,8 @@ export interface AIProviderConfig {
   apiKeyEnv: string
   defaultModel: string
   models: string[]
+  /** 是否为推理模型：输出 reasoning_content + content，max_tokens 需覆盖「思考 + 答案」 */
+  reasoning?: boolean
 }
 
 /** 塔罗牌数据 */

@@ -1,4 +1,4 @@
-import { createAIClient, getDefaultModel } from '~/server/services/ai/provider'
+import { createAIClient, getDefaultModel, getMaxTokens } from '~/server/services/ai/provider'
 import {
   checkMinuteRateLimit,
   canStartConversation,
@@ -79,10 +79,11 @@ export default defineEventHandler(async (event) => {
 
   // 7. 检索 wiki 知识库（失败不影响主流程）
   const userQuery = body.messages[body.messages.length - 1]?.content ?? ''
-  let retrievedPages: { name: string; body: string }[] = []
+  let retrievedPages: { name: string; body: string; type: string; summary: string }[] = []
   let wikiContext = ''
   try {
-    retrievedPages = searchWiki(userQuery, body.skillId, 3)
+    const result = searchWiki(userQuery, body.skillId, 3)
+    retrievedPages = result
     wikiContext = formatWikiContext(retrievedPages)
   } catch (err: any) {
     console.error('[WikiSearch] 检索失败（不影响对话）:', err.message)
@@ -98,6 +99,8 @@ export default defineEventHandler(async (event) => {
   const provider = body.provider ?? 'deepseek'
   const model = getDefaultModel(provider)
   const client = createAIClient(provider)
+  // 推理模型需更大预算（思考 + 答案），否则答案会在思考阶段被 max_tokens 耗尽
+  const maxTokens = getMaxTokens(provider, skill.maxTokens)
 
   // 10. 创建 SSE 流
   const eventStream = createEventStream(event)
@@ -107,18 +110,26 @@ export default defineEventHandler(async (event) => {
       model,
       messages: messages as any,
       stream: true,
-      max_tokens: skill.maxTokens,
+      max_tokens: maxTokens,
       temperature: 0.7,
     })
 
     // 异步转发 token 流
     ;(async () => {
       try {
+        let producedContent = false
         for await (const chunk of stream) {
           const token = (chunk.choices[0]?.delta?.content as string) ?? ''
           if (token) {
+            producedContent = true
             await eventStream.push(token)
           }
+        }
+        // 空内容保护：全程没生成任何回答（如推理耗尽 max_tokens），不扣次数、报错提示
+        if (!producedContent) {
+          await eventStream.push('[错误] AI 未返回有效内容，请稍后重试')
+          await eventStream.close()
+          return
         }
         // 成功完成，扣减一次对话次数
         incrementConversation(ip as string)
