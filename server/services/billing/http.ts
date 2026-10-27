@@ -33,9 +33,17 @@ export function noStore(event: H3Event) {
 export function sameOriginMutation(event: H3Event) {
   noStore(event)
   const origin = getHeader(event, 'origin')
-  const expected = process.env.NODE_ENV === 'production'
-    ? new URL(process.env.NUXT_PUBLIC_SITE_URL || 'https://askoutsider.com/project/fortune').origin
-    : getRequestURL(event, { xForwardedHost: false, xForwardedProto: false }).origin
+  let expected: string
+  if (process.env.NODE_ENV === 'production') {
+    const site = new URL(process.env.NUXT_PUBLIC_SITE_URL || 'https://askoutsider.com/project/fortune')
+    const host = getHeader(event, 'host')?.toLowerCase()
+    if (!host || ![site.host, `www.${site.host}`].includes(host)) {
+      throw createError({ statusCode: 403, message: '请求来源无效' })
+    }
+    expected = `${site.protocol}//${host}`
+  } else {
+    expected = getRequestURL(event, { xForwardedHost: false, xForwardedProto: false }).origin
+  }
   if (origin !== expected || !getHeader(event, 'content-type')?.toLowerCase().startsWith('application/json')) {
     throw createError({ statusCode: 403, message: '请求来源无效' })
   }

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { once } from 'node:events'
+import { request } from 'node:http'
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -40,18 +41,38 @@ test('构建产物的匿名账户、下单、签名通知和额度查询', { tim
     await new Promise(resolve => setTimeout(resolve, 100))
     if (i === 99) throw new Error(`服务器启动超时：${stderr}`)
   }
-  const api = async (path, body, cookie = '') => {
-    const response = await fetch(base + prefix + path, {
+  const api = (path, body, cookie = '', host = 'askoutsider.com', origin = site) => new Promise((resolve, reject) => {
+    const outgoing = request(base + prefix + path, {
       method: body === undefined ? 'GET' : 'POST',
-      headers: { Origin: site, Cookie: cookie, ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      headers: { Host: host, Origin: origin, Cookie: cookie,
+        ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
+    }, incoming => {
+      let raw = ''
+      incoming.setEncoding('utf8')
+      incoming.on('data', chunk => { raw += chunk })
+      incoming.on('end', () => resolve({
+        response: { status: incoming.statusCode, headers: {
+          get: name => {
+            const value = incoming.headers[name.toLowerCase()]
+            return Array.isArray(value) ? value[0] : value ?? null
+          },
+        } },
+        data: JSON.parse(raw),
+      }))
     })
-    const data = await response.json()
-    return { response, data }
-  }
+    outgoing.on('error', reject)
+    outgoing.end(body === undefined ? undefined : JSON.stringify(body))
+  })
 
   const invalid = await api('/billing/account', { action: 'fake' })
   assert.equal(invalid.response.status, 400, '非法请求体应返回 400')
+
+  const fromWww = await api('/billing/account', { action: 'fake' }, '', 'www.askoutsider.com', 'https://www.askoutsider.com')
+  assert.equal(fromWww.response.status, 400, '公开的 www 域名应通过来源校验，再由请求体校验返回 400')
+  const crossSite = await api('/billing/account', { action: 'fake' }, '', 'www.askoutsider.com', 'https://untrusted.example')
+  assert.equal(crossSite.response.status, 403, '其他来源仍应被拒绝')
+  const foreignHost = await api('/billing/account', { action: 'fake' }, '', 'untrusted.example', 'https://untrusted.example')
+  assert.equal(foreignHost.response.status, 403, '伪造 Host 与 Origin 也不应绕过域名白名单')
 
   const created = await api('/billing/account', { action: 'create' })
   assert.equal(created.response.status, 200)
