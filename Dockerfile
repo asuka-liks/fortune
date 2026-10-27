@@ -34,8 +34,12 @@ COPY --from=build /app/.output ./.output
 # 复制 wiki 知识库文件（运行时检索和 ingest 需要）
 COPY --from=build /app/server/knowledge/wiki ./.output/server/knowledge/wiki
 
+# 本地运维退款记录工具，仅容器内命令行可用
+COPY --from=build /app/scripts/refund-payment.mjs ./scripts/refund-payment.mjs
+COPY --from=build /app/server/services/billing/ledger.ts ./server/services/billing/ledger.ts
+
 # 文件归属给 fortune 用户
-RUN chown -R fortune:fortune ./.output
+RUN mkdir -p /app/.data && chown -R fortune:fortune ./.output /app/.data
 
 USER fortune
 
@@ -43,5 +47,6 @@ EXPOSE 3000
 
 ENV NITRO_HOST=0.0.0.0
 ENV NITRO_PORT=3000
+ENV PAYMENT_DB_PATH=/app/.data/billing.sqlite
 
 CMD ["node", ".output/server/index.mjs"]

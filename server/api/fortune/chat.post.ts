@@ -1,9 +1,6 @@
 import { createAIClient, getDefaultModel, getMaxTokens } from '~/server/services/ai/provider'
-import {
-  checkMinuteRateLimit,
-  canStartConversation,
-  incrementConversation,
-} from '~/server/services/ai/rate-limiter'
+import { billingError, currentWallet, ledger, noStore, requestIp, sameOriginMutation } from '../../services/billing/http'
+import { digest } from '../../services/billing/ledger'
 import { getSkill } from '~/config/skills'
 import { searchWiki, formatWikiContext } from '~/server/knowledge/search'
 import { tryAutoIngest } from '~/server/knowledge/ingest'
@@ -24,6 +21,7 @@ const chatRequestSchema = z.object({
 })
 
 export default defineEventHandler(async (event) => {
+  sameOriginMutation(event)
   // 1. 解析并校验请求体
   const rawBody = await readBody(event)
   const parsed = chatRequestSchema.safeParse(rawBody)
@@ -37,25 +35,11 @@ export default defineEventHandler(async (event) => {
   const body = parsed.data
 
   // 2. 获取 IP
-  const ip = getHeader(event, 'x-forwarded-for')
-    ?? getHeader(event, 'x-real-ip')
-    ?? 'unknown'
+  const ip = requestIp(event)
+  const db = ledger()
 
   // 3. 每分钟频率限流
-  if (!checkMinuteRateLimit(ip as string)) {
-    throw createError({
-      statusCode: 429,
-      statusMessage: '请求过于频繁，请稍后再试',
-    })
-  }
-
-  // 4. 免费次数检查
-  if (!canStartConversation(ip as string)) {
-    throw createError({
-      statusCode: 402,
-      statusMessage: '免费对话次数已用完，敬请期待更新',
-    })
-  }
+  try { db.limit('chat:' + digest(ip), 10, 60_000) } catch (error) { billingError(error) }
 
   // 5. 加载技能定义
   const skill = getSkill(body.skillId)
@@ -102,60 +86,45 @@ export default defineEventHandler(async (event) => {
   // 推理模型需更大预算（思考 + 答案），否则答案会在思考阶段被 max_tokens 耗尽
   const maxTokens = getMaxTokens(provider, skill.maxTokens)
 
-  // 10. 创建 SSE 流
+  // 调用 AI 前原子预占一次额度，最多运行五分钟，失败、取消和断线均释放。
+  let reservation: string
+  try { reservation = db.reserve(ip, currentWallet(event)?.id) } catch (error) { billingError(error) }
+  noStore(event)
   const eventStream = createEventStream(event)
-
-  try {
-    const stream = await client.chat.completions.create({
-      model,
-      messages: messages as any,
-      stream: true,
-      max_tokens: maxTokens,
-      temperature: 0.7,
-    })
-
-    // 异步转发 token 流
-    ;(async () => {
-      try {
-        let producedContent = false
-        for await (const chunk of stream) {
-          const token = (chunk.choices[0]?.delta?.content as string) ?? ''
-          if (token) {
-            producedContent = true
-            await eventStream.push(token)
-          }
-        }
-        // 空内容保护：全程没生成任何回答（如推理耗尽 max_tokens），不扣次数、报错提示
-        if (!producedContent) {
-          await eventStream.push('[错误] AI 未返回有效内容，请稍后重试')
-          await eventStream.close()
-          return
-        }
-        // 成功完成，扣减一次对话次数
-        incrementConversation(ip as string)
-        await eventStream.push('__DONE__')
-        await eventStream.close()
-
-        // 11. 异步分析对话，自动收录新知识到 wiki（fire-and-forget）
-        tryAutoIngest(
-          body.messages,
-          body.skillId,
-          retrievedPages,
-          provider,
-        ).catch((err: any) => {
-          console.error('[WikiIngest] 自动收录异常:', err.message)
-        })
-      } catch (err: any) {
-        await eventStream.push(`[错误] ${err.message}`)
-        await eventStream.close()
+  const abort = new AbortController()
+  let completed = false, disconnected = false
+  const timeout = setTimeout(() => abort.abort(), 5 * 60_000)
+  eventStream.onClosed(() => {
+    disconnected = true
+    abort.abort()
+    clearTimeout(timeout)
+    if (!completed) db.finish(reservation, false)
+  })
+  void (async () => {
+    try {
+      const stream = await client.chat.completions.create({
+        model, messages: messages as any, stream: true, max_tokens: maxTokens, temperature: 0.7,
+      }, { signal: abort.signal })
+      let producedContent = false, finishReason: string | null = null
+      for await (const chunk of stream) {
+        finishReason = chunk.choices[0]?.finish_reason ?? finishReason
+        const token = chunk.choices[0]?.delta?.content ?? ''
+        if (token) { producedContent = true; await eventStream.push(token) }
       }
-    })()
-  } catch (err: any) {
-    throw createError({
-      statusCode: 502,
-      statusMessage: `AI 服务调用失败: ${err.message}`,
-    })
-  }
-
+      if (!producedContent || finishReason !== 'stop' || abort.signal.aborted) throw new Error('Incomplete answer')
+      if (!db.finish(reservation, true)) throw new Error('Reservation expired')
+      completed = true
+      await eventStream.push('__DONE__')
+      tryAutoIngest(body.messages, body.skillId, retrievedPages, provider)
+        .catch(() => console.error('[WikiIngest] 自动收录失败'))
+    } catch {
+      if (!completed) db.finish(reservation, false)
+      if (!disconnected) await eventStream.push('__ERROR__:' + (locale === 'en'
+        ? 'The reading did not complete. Your credit was returned.' : '本次回复未完整生成，次数已返还，请重试。')).catch(() => {})
+    } finally {
+      clearTimeout(timeout)
+      await eventStream.close().catch(() => {})
+    }
+  })()
   return eventStream.send()
 })

@@ -1,16 +1,11 @@
 import { drawFunCards, formatSGCard, formatSGThird } from '~/server/utils/sanguosha'
 import { deriveByPoints, formatPointHexagram } from '~/server/utils/bagua'
 
-import { checkMinuteRateLimit } from '~/server/services/ai/rate-limiter'
+import { billingError, ledger, requestIp } from '../../services/billing/http'
+import { digest } from '../../services/billing/ledger'
 
 export default defineEventHandler(async (event) => {
-  // IP 频率限流
-  const ip = getHeader(event, 'x-forwarded-for')
-    ?? getHeader(event, 'x-real-ip')
-    ?? 'unknown'
-  if (!checkMinuteRateLimit(ip as string)) {
-    throw createError({ statusCode: 429, statusMessage: '请求过于频繁，请稍后再试' })
-  }
+  try { ledger().limit('draw:' + digest(requestIp(event)), 10, 60_000) } catch (error) { billingError(error) }
 
   const body = await readBody(event).catch(() => ({}))
   const locale = body.locale || 'zh-CN'

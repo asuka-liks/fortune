@@ -1,5 +1,6 @@
 <template>
   <div class="flex h-full flex-col">
+    <PaymentPanel :remaining-quota="remainingQuota" @changed="fetchQuota" />
     <!-- 技能表单区域（侧边栏选技能后显示） -->
     <div v-if="showSkillForm" class="border-b bg-white px-4 py-3">
       <BaZiForm

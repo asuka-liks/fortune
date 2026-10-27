@@ -1,17 +1,7 @@
-import { getQuota } from '~/server/services/ai/rate-limiter'
+import { currentWallet, ledger, noStore, requestIp } from '../../services/billing/http'
 
-/** 查询当前 IP 的剩余对话次数 */
+/** 免费次数按来源 IP，付费次数按恢复码账户计算。 */
 export default defineEventHandler((event) => {
-  const ip =
-    getHeader(event, 'x-forwarded-for') ??
-    getHeader(event, 'x-real-ip') ??
-    'unknown'
-
-  const quota = getQuota(ip as string)
-
-  return {
-    remaining: quota.remaining,
-    total: quota.total,
-    isPaid: quota.isPaid,
-  }
+  noStore(event)
+  return ledger().quota(requestIp(event), currentWallet(event)?.id)
 })
