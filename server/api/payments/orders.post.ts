@@ -17,6 +17,6 @@ export default defineEventHandler(async (event) => {
     db.limit('order-ip:' + digest(requestIp(event)), 10, 60_000)
     db.limit('order-wallet:' + wallet.id, 5, 60_000)
     const order = db.createOrder(wallet.id, body.packageId, body.channel)
-    return { orderId: order.id, ...paymentForm(order, config) }
+    return { orderId: order.id, ...paymentForm(order, config, getHeader(event, 'origin')) }
   } catch (error) { billingError(error) }
 })

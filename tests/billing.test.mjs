@@ -157,6 +157,14 @@ test('下单只返回签名表单，不泄露密钥；通知带部署子路径',
   assert.equal(JSON.stringify(form).includes(config.key),false)
   assert.equal(verifyEpay(form.fields,config.key),true)
 })
+test('从 www 域名付款时回跳原域名以保留额度账户', t => {
+  const { db, walletId } = fixture(t)
+  const order = db.createOrder(walletId, 'single', 'alipay')
+  const form = paymentForm(order, config, 'https://www.example.com')
+  assert.equal(form.fields.return_url, 'https://www.example.com/project/fortune/payment')
+  assert.equal(form.fields.notify_url, 'https://example.com/project/fortune/api/payments/xiaodou/notify')
+  assert.equal(verifyEpay(form.fields, config.key), true)
+})
 test('主动查单走 HTTPS POST，未知、未支付或错商户不能到账', async t => {
   const original=globalThis.fetch; t.after(()=>{globalThis.fetch=original})
   let response={code:1,status:1,pid:config.pid,out_trade_no:'ft_test',money:'1.00',trade_no:'trade',type:'alipay'}

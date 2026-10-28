@@ -28,12 +28,14 @@ export function moneyToFen(value: unknown): number {
   const [yuan, decimal = ''] = value.split('.')
   return Number(yuan) * 100 + Number(decimal.padEnd(2, '0'))
 }
-export function paymentForm(order: Order, config: PaymentConfig) {
+export function paymentForm(order: Order, config: PaymentConfig, returnOrigin?: string) {
+  const returnUrl = new URL(`${config.siteUrl}/payment`)
+  if (returnOrigin) returnUrl.host = new URL(returnOrigin).host
   const fields: Record<string, string> = {
     pid: config.pid, type: order.channel, out_trade_no: order.id,
     money: (order.amount_fen / 100).toFixed(2), name: `AI 运势解读 ${order.credits} 次`,
     notify_url: `${config.siteUrl}/api/payments/xiaodou/notify`,
-    return_url: `${config.siteUrl}/payment`, sign_type: 'MD5',
+    return_url: returnUrl.href, sign_type: 'MD5',
   }
   fields.sign = signEpay(fields, config.key)
   return { action: config.gateway, fields }

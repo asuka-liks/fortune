@@ -89,6 +89,16 @@ test('构建产物的匿名账户、下单、签名通知和额度查询', { tim
   assert.equal(purchase.data.fields.money, '9.90')
   assert.equal(purchase.data.fields.sign, sign(purchase.data.fields))
   const id = purchase.data.orderId
+  const wwwHost = 'www.askoutsider.com', wwwOrigin = 'https://www.askoutsider.com'
+  const wwwCreated = await api('/billing/account', { action: 'create' }, '', wwwHost, wwwOrigin)
+  const wwwCookie = wwwCreated.response.headers.get('set-cookie')?.split(';')[0]
+  assert.ok(wwwCookie)
+  assert.equal((await api('/billing/account', { action: 'confirm' }, wwwCookie, wwwHost, wwwOrigin)).response.status, 200)
+  const wwwPurchase = await api('/payments/orders', { packageId: 'single', channel: 'alipay' }, wwwCookie, wwwHost, wwwOrigin)
+  assert.equal(wwwPurchase.response.status, 200)
+  assert.equal(wwwPurchase.data.fields.return_url, 'https://www.askoutsider.com/project/fortune/payment')
+  assert.equal(wwwPurchase.data.fields.notify_url, 'https://askoutsider.com/project/fortune/api/payments/xiaodou/notify')
+  assert.equal(wwwPurchase.data.fields.sign, sign(wwwPurchase.data.fields))
   assert.equal((await api(`/payments/orders/${id}`)).response.status, 401)
   assert.equal((await api('/payments/orders', { packageId: 'unknown', channel: 'alipay' }, cookie)).response.status, 400)
 
