@@ -6,7 +6,7 @@ import { DatabaseSync } from 'node:sqlite'
 export const PACKAGES = [
   { id: 'single', amountFen: 100, credits: 1 },
   { id: 'dozen', amountFen: 990, credits: 12 },
-  { id: 'thirty', amountFen: 2000, credits: 30 },
+  { id: 'thirty', amountFen: 1990, credits: 30 },
 ] as const
 export const FREE_PER_DAY = 5
 export const RESERVATION_MS = 10 * 60_000
@@ -25,6 +25,14 @@ export interface Order {
   id: string; wallet_id: string; amount_fen: number; credits: number
   channel: 'alipay' | 'wxpay'; status: 'pending' | 'paid' | 'refunded'
   trade_no: string | null; created_at: number; last_checked_at: number
+}
+export interface OnePayPurchase {
+  id: string; wallet_id: string; package_id: string; sku_id: string
+  callback_url: string; purchase_url: string | null; created_at: number
+}
+export interface OnePayReading {
+  id: string; wallet_id: string; state: 'generating' | 'awaiting' | 'delivered'
+  content: string | null; created_at: number
 }
 interface Reservation {
   id: string; wallet_id: string | null; free_key: string | null; day: string
@@ -64,6 +72,17 @@ export class Ledger {
       );
       CREATE INDEX IF NOT EXISTS reservations_expiry ON reservations(state, expires_at);
       CREATE TABLE IF NOT EXISTS rate_limits (key TEXT PRIMARY KEY, count INTEGER NOT NULL, reset_at INTEGER NOT NULL);
+      CREATE TABLE IF NOT EXISTS onepay_purchases (
+        id TEXT PRIMARY KEY, wallet_id TEXT NOT NULL REFERENCES wallets(id),
+        package_id TEXT NOT NULL, sku_id TEXT NOT NULL, callback_url TEXT NOT NULL,
+        purchase_url TEXT, created_at INTEGER NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS onepay_readings (
+        id TEXT PRIMARY KEY, wallet_id TEXT NOT NULL REFERENCES wallets(id),
+        state TEXT NOT NULL CHECK(state IN ('generating','awaiting','delivered')),
+        content TEXT, created_at INTEGER NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS onepay_readings_wallet ON onepay_readings(wallet_id, state);
     `)
   }
   close() { this.db.close() }
@@ -171,6 +190,52 @@ export class Ledger {
   }
   order(id: string) { return this.db.prepare('SELECT * FROM orders WHERE id=?').get(id) as unknown as Order | undefined }
   orders(walletId: string) { return this.db.prepare('SELECT * FROM orders WHERE wallet_id=? ORDER BY created_at DESC LIMIT 10').all(walletId) as unknown as Order[] }
+  onePayPurchase(walletId: string, id: string) {
+    return this.db.prepare('SELECT * FROM onepay_purchases WHERE id=? AND wallet_id=?').get(id, walletId) as OnePayPurchase | undefined
+  }
+  startOnePayPurchase(walletId: string, packageId: string, skuId: string, callbackUrl: string, id: string, now = Date.now()) {
+    return this.transaction(() => {
+      if (!this.wallet(walletId)?.recovery_saved) throw new BillingError('请先保存并确认恢复码')
+      const existing = this.onePayPurchase(walletId, id)
+      if (existing) {
+        if (existing.package_id !== packageId || existing.sku_id !== skuId || existing.callback_url !== callbackUrl) {
+          throw new BillingError('购买请求与原请求不一致')
+        }
+        return existing
+      }
+      this.db.prepare('INSERT INTO onepay_purchases VALUES (?,?,?,?,?,NULL,?)')
+        .run(id, walletId, packageId, skuId, callbackUrl, now)
+      return this.onePayPurchase(walletId, id)!
+    })
+  }
+  saveOnePayPurchaseUrl(walletId: string, id: string, url: string) {
+    this.db.prepare('UPDATE onepay_purchases SET purchase_url=? WHERE id=? AND wallet_id=?').run(url, id, walletId)
+  }
+  onePayReading(walletId: string, id: string) {
+    return this.db.prepare('SELECT * FROM onepay_readings WHERE id=? AND wallet_id=?').get(id, walletId) as OnePayReading | undefined
+  }
+  startOnePayReading(walletId: string, id: string, now = Date.now()) {
+    return this.transaction(() => {
+      const existing = this.onePayReading(walletId, id)
+      if (existing) return existing
+      this.db.prepare("INSERT INTO onepay_readings VALUES (?,?,'generating',NULL,?)").run(id, walletId, now)
+      return this.onePayReading(walletId, id)!
+    })
+  }
+  saveOnePayReading(walletId: string, id: string, content: string) {
+    return !!this.db.prepare("UPDATE onepay_readings SET state='awaiting',content=? WHERE id=? AND wallet_id=? AND state='generating'")
+      .run(content, id, walletId).changes
+  }
+  deliverOnePayReading(walletId: string, id: string) {
+    return !!this.db.prepare("UPDATE onepay_readings SET state='delivered' WHERE id=? AND wallet_id=? AND state='awaiting'")
+      .run(id, walletId).changes
+  }
+  removeOnePayReading(walletId: string, id: string) {
+    this.db.prepare("DELETE FROM onepay_readings WHERE id=? AND wallet_id=? AND state='generating'").run(id, walletId)
+  }
+  discardOnePayReading(walletId: string, id: string) {
+    this.db.prepare("DELETE FROM onepay_readings WHERE id=? AND wallet_id=? AND state='awaiting'").run(id, walletId)
+  }
   claimCheck(id: string, now = Date.now()) {
     return !!this.db.prepare("UPDATE orders SET last_checked_at=? WHERE id=? AND status='pending' AND last_checked_at<?")
       .run(now, id, now - 15_000).changes

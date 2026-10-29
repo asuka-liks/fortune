@@ -38,7 +38,7 @@ test('未确认恢复码不能购买，套餐不能伪造', t => {
   assert.throws(() => db.createOrder(wallet.id, 'single', 'alipay'), /恢复码/)
   db.confirmRecovery(wallet.id)
   assert.throws(() => db.createOrder(wallet.id, 'unlimited', 'alipay'), /不存在/)
-  assert.deepEqual(['single','dozen','thirty'].map(p => { const o = db.createOrder(wallet.id, p, 'alipay'); return [o.amount_fen,o.credits] }), [[100,1],[990,12],[2000,30]])
+  assert.deepEqual(['single','dozen','thirty'].map(p => { const o = db.createOrder(wallet.id, p, 'alipay'); return [o.amount_fen,o.credits] }), [[100,1],[990,12],[1990,30]])
 })
 test('重复付款通知只增加一次额度', t => {
   const { db, walletId } = fixture(t)
@@ -156,6 +156,11 @@ test('下单只返回签名表单，不泄露密钥；通知带部署子路径',
   assert.equal(form.fields.return_url,'https://example.com/project/fortune/payment')
   assert.equal(JSON.stringify(form).includes(config.key),false)
   assert.equal(verifyEpay(form.fields,config.key),true)
+  const thirty = db.createOrder(walletId, 'thirty', 'wxpay')
+  const wechatForm = paymentForm(thirty, config)
+  assert.equal(wechatForm.fields.money, '19.90')
+  assert.equal(wechatForm.fields.type, 'wxpay')
+  assert.equal(verifyEpay(wechatForm.fields, config.key), true)
 })
 test('从 www 域名付款时回跳原域名以保留额度账户', t => {
   const { db, walletId } = fixture(t)
@@ -176,4 +181,37 @@ test('主动查单走 HTTPS POST，未知、未支付或错商户不能到账', 
   assert.equal((await queryPayment('ft_test',config)).amountFen,100)
   response={...response,status:0}; assert.equal(await queryPayment('ft_test',config),null)
   response={...response,status:1,pid:'other'}; await assert.rejects(queryPayment('ft_test',config))
+})
+
+test('一人付购买请求先持久化，同一编号重试不改变套餐或回跳地址', t => {
+  const { db, walletId } = fixture(t)
+  const id = 'yp_purchase_test'
+  const first = db.startOnePayPurchase(walletId, 'thirty', 'sku-30', 'https://example.com/payment', id)
+  assert.equal(first.purchase_url, null)
+  db.saveOnePayPurchaseUrl(walletId, id, 'https://render.alipay.com/checkout')
+  assert.equal(db.startOnePayPurchase(walletId, 'thirty', 'sku-30', 'https://example.com/payment', id).purchase_url,
+    'https://render.alipay.com/checkout')
+  assert.throws(() => db.startOnePayPurchase(walletId, 'dozen', 'sku-12', 'https://example.com/payment', id), /不一致/)
+  assert.equal(db.onePayPurchase('another-wallet', id), undefined)
+})
+
+test('一人付完整回复先保存再核销，重复请求只复用原回复', t => {
+  const { db, walletId } = fixture(t)
+  const id = 'yp_reading_test'
+  assert.equal(db.startOnePayReading(walletId, id).state, 'generating')
+  assert.equal(db.saveOnePayReading(walletId, id, '完整解读'), true)
+  assert.equal(db.startOnePayReading(walletId, id).content, '完整解读')
+  assert.equal(db.deliverOnePayReading(walletId, id), true)
+  assert.equal(db.deliverOnePayReading(walletId, id), false)
+  assert.equal(db.onePayReading(walletId, id).state, 'delivered')
+  assert.equal(db.onePayReading('another-wallet', id), undefined)
+})
+
+test('改价前的微信订单仍按订单原价核实到账', t => {
+  const { db, walletId } = fixture(t)
+  const order = db.createOrder(walletId, 'thirty', 'wxpay')
+  db.db.prepare('UPDATE orders SET amount_fen=2000 WHERE id=?').run(order.id)
+  assert.equal(db.creditOrder(order.id, 2000, 'wxpay', 'old-price-trade'), true)
+  assert.equal(db.wallet(walletId).credits, 30)
+  assert.throws(() => db.creditOrder(order.id, 1990, 'wxpay', 'new-price-trade'), /不符/)
 })

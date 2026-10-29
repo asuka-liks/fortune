@@ -3,6 +3,7 @@
     <div class="flex flex-wrap items-center justify-between gap-2">
       <span class="text-purple-800">{{ copy.free }} {{ overview?.quota.free ?? '—' }} · {{ copy.paid }} {{ overview?.quota.paid ?? '—' }}</span>
       <div class="flex gap-3">
+        <button class="text-gray-600 hover:underline" :disabled="busy" @click="run(async () => { await refresh(); emit('changed') })">{{ copy.refreshBalance }}</button>
         <button class="font-medium text-purple-700 hover:underline" :disabled="busy" @click="openShop">{{ copy.buy }}</button>
         <button class="text-gray-600 hover:underline" @click="show = true; restoring = true">{{ copy.restore }}</button>
       </div>
@@ -28,9 +29,22 @@
           <button type="submit" class="w-full rounded-xl bg-purple-600 py-3 text-white disabled:opacity-50" :disabled="busy || !restoreCode.trim()">{{ copy.restore }}</button>
           <button type="button" class="text-sm text-purple-700 underline" @click="restoring = false; openShop()">{{ copy.back }}</button>
         </form>
+        <div v-else-if="onePayCheckout" class="space-y-3 text-sm">
+          <p v-if="onePayConfirmed" class="rounded-lg bg-green-50 p-3 text-green-800" role="status">{{ copy.received }}</p>
+          <p class="text-gray-600">{{ copy.alipayCheckoutHelp }}</p>
+          <iframe :src="onePayCheckout.qrUrl" :title="copy.alipayQrTitle" referrerpolicy="no-referrer"
+            class="h-80 w-full rounded-lg border bg-white" />
+          <a :href="onePayCheckout.appUrl" class="block w-full rounded-xl bg-purple-600 py-3 text-center font-medium text-white">{{ copy.openAlipay }}</a>
+          <a :href="onePayCheckout.qrUrl" target="_blank" rel="noopener noreferrer" class="block text-center text-purple-700 underline">{{ copy.openQrPage }}</a>
+          <button class="w-full rounded-xl border py-3 text-purple-700 disabled:opacity-50" :disabled="busy"
+            @click="run(async () => { await refresh(); emit('changed') })">{{ copy.refreshBalance }}</button>
+          <button class="text-purple-700 underline" @click="onePayCheckout = null">{{ copy.back }}</button>
+        </div>
         <div v-else class="space-y-4">
           <p class="text-sm text-gray-600">{{ copy.rules }}</p>
           <p v-if="!overview?.enabled" class="rounded-lg bg-amber-50 p-3 text-sm text-amber-800">{{ copy.unavailable }}</p>
+          <p v-if="overview?.onePayUnavailable" class="rounded-lg bg-amber-50 p-3 text-sm text-amber-800">{{ copy.onePayUnavailable }}</p>
+          <p class="text-xs text-gray-500">{{ copy.balanceSources }} {{ overview?.quota.xiaodou ?? 0 }} / {{ overview?.quota.onepay ?? 0 }}</p>
           <div v-if="newCode" class="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
             <p class="font-semibold text-amber-900">{{ copy.saveTitle }}</p>
             <p class="text-xs text-amber-800">{{ copy.saveHelp }}</p>
@@ -53,13 +67,13 @@
           </fieldset>
           <label class="block text-sm text-gray-700">{{ copy.method }}
             <select v-model="channel" class="mt-1 w-full rounded-lg border p-2">
-              <option value="alipay">{{ copy.alipay }}</option>
-              <option value="wxpay" :disabled="!inWeChat">{{ copy.wechat }}</option>
+              <option value="alipay" :disabled="!overview?.channels.alipayPackages.includes(selected)">{{ copy.alipay }}</option>
+              <option value="wxpay" :disabled="!inWeChat || !overview?.channels.wxpay">{{ copy.wechat }}</option>
             </select>
           </label>
           <p v-if="!inWeChat" class="text-xs text-gray-500">{{ copy.wechatHelp }}</p>
           <button class="w-full rounded-xl bg-purple-600 py-3 font-medium text-white disabled:opacity-50"
-            :disabled="busy || !overview?.enabled || !overview?.recoverySaved" @click="purchase">{{ busy ? copy.working : copy.pay }}</button>
+            :disabled="busy || !overview?.recoverySaved || !canPurchase" @click="purchase">{{ busy ? copy.working : copy.pay }}</button>
           <p v-if="!overview?.recoverySaved" class="text-xs text-amber-700">{{ copy.mustSave }}</p>
           <div v-if="overview?.orders.length" class="border-t pt-3">
             <h3 class="mb-2 text-sm font-medium text-gray-700">{{ copy.orders }}</h3>
@@ -78,11 +92,12 @@
 <script setup lang="ts">
 interface Overview {
   enabled: boolean; hasWallet: boolean; recoverySaved: boolean
-  quota: { free: number; paid: number }
+  channels: { wxpay: boolean; alipayPackages: string[] }; onePayUnavailable: boolean
+  quota: { free: number; paid: number; xiaodou: number; onepay: number }
   packages: { id: string; amountFen: number; credits: number }[]
   orders: { id: string; amountFen: number; credits: number; status: string; createdAt: number }[]
 }
-const props = defineProps<{ remainingQuota?: number; orderId?: string }>()
+const props = defineProps<{ remainingQuota?: number; orderId?: string; returnedFromPayment?: boolean }>()
 const emit = defineEmits<{ changed: [] }>()
 const base = useRuntimeConfig().app.baseURL
 const localeStore = useLocaleStore()
@@ -100,6 +115,11 @@ const copy = computed(() => localeStore.locale === 'en' ? {
   mustSave: 'Save and confirm your recovery code before purchasing.', orders: 'Recent orders (tap to check)',
   failed: 'Request failed. Please try again.', restoreFirst: 'Restore the credit account used for this purchase, then check again.',
   copyFailed: 'Could not copy automatically. Please select and copy the code manually.',
+  onePayUnavailable: 'Alipay balance is temporarily unavailable. Please try again later.',
+  balanceSources: 'WeChat / Alipay readings:',
+  refreshBalance: 'Refresh balance',
+  alipayCheckoutHelp: 'Scan the code with Alipay, or open Alipay on this device. Return here after paying and refresh your balance.',
+  alipayQrTitle: 'Alipay checkout QR code', openAlipay: 'Open Alipay', openQrPage: 'Open QR page',
 } : {
   free: '今日免费：', paid: '已购剩余：', buy: '购买次数', restore: '恢复额度', close: '关闭',
   received: '次数已到账', refunded: '已退款', pending: '等待支付确认', check: '查询支付结果',
@@ -114,14 +134,26 @@ const copy = computed(() => localeStore.locale === 'en' ? {
   mustSave: '保存并确认恢复码后才能购买。', orders: '最近订单（点击可查单）',
   failed: '操作失败，请稍后重试。', restoreFirst: '请先用恢复码找回购买时的额度账户，再查询订单。',
   copyFailed: '自动复制失败，请手动选中并复制恢复码。',
+  onePayUnavailable: '暂时无法查询支付宝次数，请稍后重试。',
+  balanceSources: '微信 / 支付宝剩余次数：',
+  refreshBalance: '刷新余额',
+  alipayCheckoutHelp: '用支付宝扫描下方二维码，或在当前设备打开支付宝。付款后返回本站刷新余额。',
+  alipayQrTitle: '支付宝付款二维码', openAlipay: '打开支付宝', openQrPage: '单独打开二维码页面',
 })
 const overview = ref<Overview | null>(null)
 const show = ref(false), restoring = ref(false), busy = ref(false), checking = ref(false)
 const error = ref(''), newCode = ref(''), restoreCode = ref(''), savedCheck = ref(false), copied = ref(false)
 const selected = ref('dozen'), channel = ref<'alipay' | 'wxpay'>('alipay'), inWeChat = ref(false)
+const onePayCheckout = ref<{ appUrl: string; qrUrl: string; balanceBefore: number } | null>(null)
+const onePayConfirmed = ref(false)
+const canPurchase = computed(() => channel.value === 'alipay'
+  ? !!overview.value?.channels.alipayPackages.includes(selected.value)
+  : !!overview.value?.channels.wxpay && inWeChat.value)
+let purchaseIntent: { packageId: string; channel: string; requestId: string } | null = null
 const activeOrder = ref(''), orderStatus = ref('pending')
 let timer: ReturnType<typeof setInterval> | undefined
 let pollCount = 0
+let checkoutPollCount = 0
 async function api<T>(path: string, body?: unknown): Promise<T> {
   const response = await fetch(base + path, body === undefined ? { cache: 'no-store' } : {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
@@ -130,7 +162,12 @@ async function api<T>(path: string, body?: unknown): Promise<T> {
   if (!response.ok) throw new Error(data.message || copy.value.failed)
   return data as T
 }
-async function refresh() { overview.value = await api<Overview>('api/billing/overview') }
+async function refresh() {
+  overview.value = await api<Overview>('api/billing/overview')
+  if (onePayCheckout.value && overview.value.quota.onepay > onePayCheckout.value.balanceBefore) onePayConfirmed.value = true
+  if (channel.value === 'alipay' && !overview.value.channels.alipayPackages.includes(selected.value) &&
+      overview.value.channels.wxpay && inWeChat.value) channel.value = 'wxpay'
+}
 async function action(body: Record<string, string>) {
   const result = await api<{ recoveryCode: string | null; saved: boolean }>('api/billing/account', body)
   if (result.recoveryCode) { newCode.value = result.recoveryCode; savedCheck.value = false; copied.value = false }
@@ -169,9 +206,24 @@ async function copyCode() {
 }
 async function purchase() {
   await run(async () => {
-    const result = await api<{ orderId: string; action: string; fields: Record<string, string> }>('api/payments/orders', {
-      packageId: selected.value, channel: channel.value,
+    if (!canPurchase.value) return
+    if (!purchaseIntent || purchaseIntent.packageId !== selected.value || purchaseIntent.channel !== channel.value) {
+      purchaseIntent = { packageId: selected.value, channel: channel.value, requestId: crypto.randomUUID() }
+    }
+    const result = await api<
+      { mode: 'onepay'; appUrl: string; qrUrl: string } | { mode: 'form'; orderId: string; action: string; fields: Record<string, string> }
+    >('api/payments/orders', {
+      ...purchaseIntent,
     })
+    purchaseIntent = null
+    if (result.mode === 'onepay') {
+      sessionStorage.removeItem('fortune-payment-order')
+      activeOrder.value = ''
+      onePayCheckout.value = { appUrl: result.appUrl, qrUrl: result.qrUrl, balanceBefore: overview.value?.quota.onepay ?? 0 }
+      onePayConfirmed.value = false
+      checkoutPollCount = 0
+      return
+    }
     sessionStorage.setItem('fortune-payment-order', result.orderId)
     const form = document.createElement('form')
     form.method = 'POST'; form.action = result.action
@@ -195,6 +247,7 @@ async function checkOrder() {
   finally { checking.value = false }
 }
 watch(() => props.remainingQuota, () => { refresh().catch(() => {}) })
+watch(show, visible => { if (!visible) onePayCheckout.value = null })
 onMounted(async () => {
   inWeChat.value = /MicroMessenger/i.test(navigator.userAgent)
   try {
@@ -204,7 +257,13 @@ onMounted(async () => {
     if (activeOrder.value) await checkOrder()
   } catch (e) { error.value = e instanceof Error ? e.message : copy.value.failed }
   timer = setInterval(() => {
-    if (activeOrder.value && orderStatus.value === 'pending' && !document.hidden && pollCount++ < 40) void checkOrder()
+    if (document.hidden) return
+    if (onePayCheckout.value && checkoutPollCount++ < 80) {
+      void refresh().then(() => emit('changed')).catch(() => {})
+    } else if (activeOrder.value && orderStatus.value === 'pending' && pollCount++ < 40) void checkOrder()
+    else if (props.returnedFromPayment && pollCount++ < 12) {
+      void refresh().then(() => emit('changed')).catch(() => {})
+    }
   }, 15_000)
 })
 onBeforeUnmount(() => clearInterval(timer))

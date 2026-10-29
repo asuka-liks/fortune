@@ -43,21 +43,26 @@ export function useChat() {
       return
     }
 
-    // 发送前检查配额
+    const lastAssistant = session.messages.at(-1)
+    const lastUser = session.messages.at(-2)
+    const retry = lastAssistant?.role === 'assistant' && lastAssistant.content === '' &&
+      lastUser?.role === 'user' && lastUser.content === text
+
+    // 同一条未完成的解读复用原请求号，以免一人付重复核销。
     await fetchQuota()
-    if (remainingQuota.value <= 0) {
+    if (remainingQuota.value <= 0 && !retry) {
       chatStore.setError(t('error.quotaExhausted'))
       return
     }
 
     // 添加用户消息
-    const userMsg: ChatMessage = {
+    const userMsg: ChatMessage = retry ? lastUser : {
       id: generateUUID(),
       role: 'user',
       content: text,
       timestamp: Date.now(),
     }
-    chatStore.addMessage(session.id, userMsg)
+    if (!retry) chatStore.addMessage(session.id, userMsg)
     chatStore.setStreaming(true)
     chatStore.setError(null)
 
@@ -68,7 +73,7 @@ export function useChat() {
       content: '',
       timestamp: Date.now(),
     }
-    chatStore.addMessage(session.id, assistantMsg)
+    if (!retry) chatStore.addMessage(session.id, assistantMsg)
 
     // 构建请求体
     const context = { ...skillStore.skillContext }
@@ -88,6 +93,7 @@ export function useChat() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          requestId: userMsg.id,
           skillId: skillStore.activeSkillId,
           context: {
             ...context,

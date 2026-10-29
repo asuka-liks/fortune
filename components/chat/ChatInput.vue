@@ -52,6 +52,7 @@ const props = defineProps<{
   placeholder?: string
   remainingQuota: number
   quotaTotal: number
+  allowRetry: boolean
 }>()
 
 const emit = defineEmits<{
@@ -64,7 +65,7 @@ const { t } = useI18n()
 const inputText = ref('')
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
-const isQuotaExhausted = computed(() => props.remainingQuota <= 0)
+const isQuotaExhausted = computed(() => props.remainingQuota <= 0 && !props.allowRetry)
 
 function handleSubmit(e?: Event) {
   if (e && (e as KeyboardEvent).shiftKey) return // Shift+Enter 换行

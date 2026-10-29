@@ -33,6 +33,7 @@
       :placeholder="inputPlaceholder"
       :remaining-quota="remainingQuota"
       :quota-total="quotaTotal"
+      :allow-retry="messages.length >= 2 && messages[messages.length - 1]?.role === 'assistant' && !messages[messages.length - 1]?.content"
       @send="$emit('send', $event)"
       @stop="$emit('stop')"
     />
