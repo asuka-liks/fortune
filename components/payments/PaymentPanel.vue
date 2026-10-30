@@ -5,7 +5,7 @@
       <div class="flex flex-wrap items-center gap-x-4">
         <button class="min-h-8" :disabled="busy" @click="run(async () => { await refresh(); emit('changed') })">{{ copy.refreshBalance }}</button>
         <button class="min-h-8 font-semibold" :disabled="busy" @click="openShop">{{ copy.buy }}</button>
-        <button class="min-h-8" @click="show = true; restoring = true">{{ copy.restore }}</button>
+        <button class="min-h-8" @click="openRestore">{{ copy.restore }}</button>
       </div>
     </div>
     <p v-if="activeOrder" class="mt-2 text-xs text-gray-600" role="status">
@@ -23,10 +23,18 @@
         <p v-if="error" class="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">{{ error }}</p>
         <form v-if="restoring" class="space-y-4" @submit.prevent="restore">
           <p class="text-sm text-gray-600">{{ copy.restoreHelp }}</p>
+          <p v-if="grantCredits" class="border border-[#c6d4c7] bg-[#e9ebe4] p-3 text-sm text-[#1c302d]" role="status">
+            {{ copy.internalGranted.replace('{n}', String(grantCredits)) }}
+          </p>
+          <div v-if="grantRecoveryCode" class="space-y-2 border border-[#d8d5c9] bg-[#fffefa] p-3 text-sm">
+            <p>{{ copy.internalRecoveryHelp }}</p>
+            <pre class="whitespace-pre-wrap break-all font-mono">{{ grantRecoveryCode }}</pre>
+            <button type="button" class="min-h-11 text-[#a84637] underline" @click="copyCode(grantRecoveryCode)">{{ copied ? copy.copied : copy.copy }}</button>
+          </div>
           <label class="block text-sm font-medium text-gray-700" for="recovery-input">{{ copy.code }}</label>
           <textarea id="recovery-input" v-model="restoreCode" autocomplete="off" spellcheck="false" rows="3"
             class="w-full rounded-lg border p-3 font-mono text-sm" :placeholder="copy.code" />
-          <button type="submit" class="min-h-11 w-full bg-[#a84637] py-3 text-white hover:bg-[#843428] disabled:opacity-50" :disabled="busy || !restoreCode.trim()">{{ copy.restore }}</button>
+          <button type="submit" class="min-h-11 w-full bg-[#a84637] py-3 text-white hover:bg-[#843428] disabled:opacity-50" :disabled="busy || !restoreCode.trim()">{{ copy.applyCode }}</button>
           <button type="button" class="min-h-11 text-sm text-[#a84637] underline" @click="restoring = false; openShop()">{{ copy.back }}</button>
         </form>
         <div v-else-if="onePayCheckout" class="space-y-3 text-sm">
@@ -104,8 +112,11 @@ const localeStore = useLocaleStore()
 const copy = computed(() => localeStore.locale === 'en' ? {
   free: 'Free today:', paid: 'Purchased:', buy: 'Buy readings', restore: 'Restore credits', close: 'Close',
   received: 'Credits received', refunded: 'Refunded', pending: 'Awaiting payment confirmation', check: 'Check payment',
-  restoreHelp: 'Enter your recovery code to switch to that credit account. Accounts are not merged. Chat history stays on the original device.',
-  code: 'Recovery code', back: 'Back to packages', rules: 'One complete AI reply uses one credit, including follow-ups. Failed or cancelled readings return the credit. Daily free credits are used first. Purchased credits do not expire.',
+  restoreHelp: 'A recovery code switches wallets without merging balances; chat history stays on the original device. An internal code adds five readings to this browser each time.',
+  code: 'Recovery or internal code', applyCode: 'Apply code', internalGranted: '{n} readings added to this browser.',
+  internalRecoveryHelp: 'Save this recovery code to keep your readings if you clear browser data or switch devices.',
+  refreshAfterGrant: 'Readings were added, but the balance could not refresh. Use Refresh balance to check.',
+  back: 'Back to packages', rules: 'One complete AI reply uses one credit, including follow-ups. Failed or cancelled readings return the credit. Daily free credits are used first. Purchased credits do not expire.',
   unavailable: 'Payments are not open yet. Existing credits can still be restored and used.',
   saveTitle: 'Save your recovery code before paying', saveHelp: 'This code is shown only now. Anyone with it can use your credits. Keep it privately; it is needed after switching devices or clearing browser data.',
   copy: 'Copy recovery code', copied: 'Copied', saved: 'I have saved this code somewhere safe.', replaceCode: 'Generate a new recovery code',
@@ -123,8 +134,11 @@ const copy = computed(() => localeStore.locale === 'en' ? {
 } : {
   free: '今日免费：', paid: '已购剩余：', buy: '购买次数', restore: '恢复额度', close: '关闭',
   received: '次数已到账', refunded: '已退款', pending: '等待支付确认', check: '查询支付结果',
-  restoreHelp: '输入恢复码后将切换到对应的额度账户，不合并余额。聊天记录仍保存在原设备上。',
-  code: '恢复码', back: '返回购买', rules: '每条完整 AI 回复扣 1 次，追问也计次；生成失败或取消返还次数。优先使用每日免费额度，已购次数不过期。',
+  restoreHelp: '输入恢复码会切换额度账户，余额不合并，聊天记录仍留在原设备；输入内部码则每次给当前浏览器增加 5 次。',
+  code: '恢复码或内部码', applyCode: '确认使用', internalGranted: '已为当前浏览器增加 {n} 次解读额度。',
+  internalRecoveryHelp: '请保存此恢复码。清除浏览器数据或更换设备后，可凭它找回额度。',
+  refreshAfterGrant: '次数已到账，但余额刷新失败。请点击“刷新余额”查看。',
+  back: '返回购买', rules: '每条完整 AI 回复扣 1 次，追问也计次；生成失败或取消返还次数。优先使用每日免费额度，已购次数不过期。',
   unavailable: '支付暂未开放，已有次数仍可恢复和使用。',
   saveTitle: '付款前请保存恢复码', saveHelp: '恢复码仅在此时展示。持有码的人可以使用你的额度，请私下保存。换设备或清除浏览器数据后，需要凭此码找回。',
   copy: '复制恢复码', copied: '已复制', saved: '我已将恢复码保存在安全的位置。', replaceCode: '生成新的恢复码',
@@ -143,6 +157,7 @@ const copy = computed(() => localeStore.locale === 'en' ? {
 const overview = ref<Overview | null>(null)
 const show = ref(false), restoring = ref(false), busy = ref(false), checking = ref(false)
 const error = ref(''), newCode = ref(''), restoreCode = ref(''), savedCheck = ref(false), copied = ref(false)
+const grantCredits = ref(0), grantRecoveryCode = ref('')
 const selected = ref('dozen'), channel = ref<'alipay' | 'wxpay'>('alipay'), inWeChat = ref(false)
 const onePayCheckout = ref<{ appUrl: string; qrUrl: string; balanceBefore: number } | null>(null)
 const onePayConfirmed = ref(false)
@@ -169,10 +184,13 @@ async function refresh() {
       overview.value.channels.wxpay && inWeChat.value) channel.value = 'wxpay'
 }
 async function action(body: Record<string, string>) {
-  const result = await api<{ recoveryCode: string | null; saved: boolean }>('api/billing/account', body)
+  const result = await api<{ recoveryCode: string | null; saved: boolean; grantedCredits?: number }>('api/billing/account', body)
   if (result.recoveryCode) { newCode.value = result.recoveryCode; savedCheck.value = false; copied.value = false }
-  await refresh()
+  if (result.grantedCredits) {
+    try { await refresh() } catch { error.value = copy.value.refreshAfterGrant }
+  } else await refresh()
   emit('changed')
+  return result
 }
 async function run(task: () => Promise<void>) {
   if (busy.value) return
@@ -184,6 +202,10 @@ async function openShop() {
   show.value = true; restoring.value = false
   await run(async () => { await refresh(); if (!overview.value?.hasWallet) await action({ action: 'create' }) })
 }
+function openRestore() {
+  show.value = true; restoring.value = true
+  grantCredits.value = 0; grantRecoveryCode.value = ''
+}
 async function confirmSaved() {
   if (!savedCheck.value) return
   await run(async () => { await action({ action: 'confirm' }) })
@@ -194,14 +216,22 @@ async function rotate() {
   await run(async () => { await action({ action: 'rotate' }) })
 }
 async function restore() {
+  grantCredits.value = 0
   await run(async () => {
-    await action({ action: 'recover', recoveryCode: restoreCode.value.trim() })
+    const result = await action({ action: 'recover', recoveryCode: restoreCode.value.trim() })
+    if (result.grantedCredits) {
+      grantCredits.value = result.grantedCredits
+      if (result.recoveryCode) grantRecoveryCode.value = result.recoveryCode
+      restoreCode.value = ''
+      return
+    }
     restoreCode.value = ''; newCode.value = ''; restoring.value = false
+    grantRecoveryCode.value = ''
     if (activeOrder.value) await checkOrder()
   })
 }
-async function copyCode() {
-  try { await navigator.clipboard.writeText(newCode.value); copied.value = true }
+async function copyCode(code = newCode.value) {
+  try { await navigator.clipboard.writeText(code); copied.value = true }
   catch { error.value = copy.value.copyFailed }
 }
 async function purchase() {

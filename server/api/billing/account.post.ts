@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { digest } from '../../services/billing/ledger'
+import { digest, INTERNAL_CREDIT_GRANT, isInternalCreditCode } from '../../services/billing/ledger'
 import { billingError, currentWallet, ledger, requestIp, requireWallet, sameOriginMutation, walletCookie } from '../../services/billing/http'
 
 const schema = z.object({ action: z.enum(['create', 'recover', 'rotate', 'confirm']), recoveryCode: z.string().max(80).optional() }).strict()
@@ -19,7 +19,13 @@ export default defineEventHandler(async (event) => {
       return { recoveryCode: account.recoveryCode, saved: false }
     }
     if (body.action === 'recover') {
-      const account = db.recover(body.recoveryCode ?? '')
+      const code = body.recoveryCode ?? ''
+      if (isInternalCreditCode(code, process.env.INTERNAL_CREDIT_CODE_HASH)) {
+        const grant = db.grantInternalCredits(currentWallet(event)?.id)
+        if (grant.token) walletCookie(event, grant.token)
+        return { recoveryCode: grant.recoveryCode, saved: !!grant.wallet.recovery_saved, grantedCredits: INTERNAL_CREDIT_GRANT }
+      }
+      const account = db.recover(code)
       walletCookie(event, account.token)
       return { recoveryCode: null, saved: !!account.wallet.recovery_saved }
     }

@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { once } from 'node:events'
 import { request } from 'node:http'
 import { mkdtempSync, rmSync } from 'node:fs'
@@ -13,6 +13,7 @@ const site = 'https://askoutsider.com'
 const prefix = '/project/fortune/api'
 const port = 30000 + Math.floor(Math.random() * 20000)
 const base = `http://127.0.0.1:${port}`
+const orderBody = packageId => ({ packageId, channel: 'wxpay', requestId: randomUUID() })
 
 function sign(fields) {
   const text = Object.keys(fields).filter(k => !['sign', 'sign_type'].includes(k) && fields[k] !== '')
@@ -79,14 +80,15 @@ test('构建产物的匿名账户、下单、签名通知和额度查询', { tim
   assert.match(created.data.recoveryCode, /^[A-F0-9-]{53}$/)
   const cookie = created.response.headers.get('set-cookie')?.split(';')[0]
   assert.ok(cookie)
-  const premature = await api('/payments/orders', { packageId: 'single', channel: 'alipay' }, cookie)
+  const premature = await api('/payments/orders', orderBody('single'), cookie)
   assert.equal(premature.response.status, 400)
   assert.equal((await api('/billing/account', { action: 'confirm' }, cookie)).response.status, 200)
 
-  const purchase = await api('/payments/orders', { packageId: 'dozen', channel: 'alipay' }, cookie)
+  const purchase = await api('/payments/orders', orderBody('dozen'), cookie)
   assert.equal(purchase.response.status, 200)
   assert.equal(purchase.data.action, 'https://pay.xiaodouap.cn/submit.php')
   assert.equal(purchase.data.fields.money, '9.90')
+  assert.equal(purchase.data.fields.type, 'wxpay')
   assert.equal(purchase.data.fields.sign, sign(purchase.data.fields))
   const id = purchase.data.orderId
   const wwwHost = 'www.askoutsider.com', wwwOrigin = 'https://www.askoutsider.com'
@@ -94,21 +96,21 @@ test('构建产物的匿名账户、下单、签名通知和额度查询', { tim
   const wwwCookie = wwwCreated.response.headers.get('set-cookie')?.split(';')[0]
   assert.ok(wwwCookie)
   assert.equal((await api('/billing/account', { action: 'confirm' }, wwwCookie, wwwHost, wwwOrigin)).response.status, 200)
-  const wwwPurchase = await api('/payments/orders', { packageId: 'single', channel: 'alipay' }, wwwCookie, wwwHost, wwwOrigin)
+  const wwwPurchase = await api('/payments/orders', orderBody('single'), wwwCookie, wwwHost, wwwOrigin)
   assert.equal(wwwPurchase.response.status, 200)
   assert.equal(wwwPurchase.data.fields.return_url, 'https://www.askoutsider.com/project/fortune/payment')
   assert.equal(wwwPurchase.data.fields.notify_url, 'https://askoutsider.com/project/fortune/api/payments/xiaodou/notify')
   assert.equal(wwwPurchase.data.fields.sign, sign(wwwPurchase.data.fields))
   assert.equal((await api(`/payments/orders/${id}`)).response.status, 401)
-  assert.equal((await api('/payments/orders', { packageId: 'unknown', channel: 'alipay' }, cookie)).response.status, 400)
+  assert.equal((await api('/payments/orders', { ...orderBody('single'), packageId: 'unknown' }, cookie)).response.status, 400)
 
   const badNotice = { pid: '49616103', out_trade_no: id, trade_no: 'forged',
-    money: '9.90', type: 'alipay', trade_status: 'TRADE_SUCCESS', sign_type: 'MD5', sign: '0'.repeat(32) }
+    money: '9.90', type: 'wxpay', trade_status: 'TRADE_SUCCESS', sign_type: 'MD5', sign: '0'.repeat(32) }
   assert.equal((await fetch(base + prefix + '/payments/xiaodou/notify?' + new URLSearchParams(badNotice))).status, 400)
   assert.equal((await api('/billing/overview', undefined, cookie)).data.quota.paid, 0)
 
   const notice = { pid: '49616103', out_trade_no: id, trade_no: 'smoke-trade-' + id,
-    money: '9.90', type: 'alipay', trade_status: 'TRADE_SUCCESS', sign_type: 'MD5' }
+    money: '9.90', type: 'wxpay', trade_status: 'TRADE_SUCCESS', sign_type: 'MD5' }
   notice.sign = sign(notice)
   const notification = base + prefix + '/payments/xiaodou/notify?' + new URLSearchParams(notice)
   const first = await fetch(notification)

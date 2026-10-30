@@ -1,4 +1,4 @@
-import { createHash, randomBytes, randomUUID } from 'node:crypto'
+import { createHash, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto'
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { DatabaseSync } from 'node:sqlite'
@@ -8,11 +8,17 @@ export const PACKAGES = [
   { id: 'dozen', amountFen: 990, credits: 12 },
   { id: 'thirty', amountFen: 1990, credits: 30 },
 ] as const
-export const FREE_PER_DAY = 5
+export const FREE_PER_DAY = 3
+export const INTERNAL_CREDIT_GRANT = 5
 export const RESERVATION_MS = 10 * 60_000
 const SESSION_MS = 365 * 24 * 3600_000
 export const digest = (value: string) => createHash('sha256').update(value).digest('hex')
 const recoveryHash = (code: string) => digest(code.replaceAll('-', '').trim().toUpperCase())
+export function isInternalCreditCode(code: string, configuredHash?: string) {
+  const normalized = code.trim().replaceAll('-', '').toUpperCase()
+  if (!/^INT[A-F0-9]{48}$/.test(normalized) || !configuredHash || !/^[A-Fa-f0-9]{64}$/.test(configuredHash)) return false
+  return timingSafeEqual(Buffer.from(digest(normalized), 'hex'), Buffer.from(configuredHash, 'hex'))
+}
 const newRecovery = () => randomBytes(24).toString('hex').toUpperCase().match(/.{8}/g)!.join('-')
 const dayKey = (now: number) => new Date(now + 8 * 3600_000).toISOString().slice(0, 10)
 
@@ -72,6 +78,11 @@ export class Ledger {
       );
       CREATE INDEX IF NOT EXISTS reservations_expiry ON reservations(state, expires_at);
       CREATE TABLE IF NOT EXISTS rate_limits (key TEXT PRIMARY KEY, count INTEGER NOT NULL, reset_at INTEGER NOT NULL);
+      CREATE TABLE IF NOT EXISTS internal_credit_grants (
+        id TEXT PRIMARY KEY, wallet_id TEXT NOT NULL REFERENCES wallets(id),
+        credits INTEGER NOT NULL CHECK(credits > 0), created_at INTEGER NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS internal_credit_grants_wallet ON internal_credit_grants(wallet_id, created_at);
       CREATE TABLE IF NOT EXISTS onepay_purchases (
         id TEXT PRIMARY KEY, wallet_id TEXT NOT NULL REFERENCES wallets(id),
         package_id TEXT NOT NULL, sku_id TEXT NOT NULL, callback_url TEXT NOT NULL,
@@ -126,6 +137,21 @@ export class Ledger {
     })
   }
   confirmRecovery(walletId: string) { this.db.prepare('UPDATE wallets SET recovery_saved=1 WHERE id=?').run(walletId) }
+  grantInternalCredits(walletId?: string, now = Date.now()) {
+    return this.transaction(() => {
+      let recoveryCode: string | null = null
+      let token: string | null = null
+      if (!walletId) {
+        walletId = randomUUID()
+        recoveryCode = newRecovery()
+        this.db.prepare('INSERT INTO wallets (id,recovery_hash) VALUES (?,?)').run(walletId, recoveryHash(recoveryCode))
+        token = this.addSession(walletId, now)
+      } else if (!this.wallet(walletId)) throw new BillingError('额度账户不存在', 404)
+      this.db.prepare('INSERT INTO internal_credit_grants VALUES (?,?,?,?)').run(randomUUID(), walletId, INTERNAL_CREDIT_GRANT, now)
+      this.db.prepare('UPDATE wallets SET credits=credits+? WHERE id=?').run(INTERNAL_CREDIT_GRANT, walletId)
+      return { wallet: this.wallet(walletId)!, recoveryCode, token }
+    })
+  }
   limit(key: string, max: number, windowMs: number, now = Date.now()) {
     return this.transaction(() => {
       this.db.prepare('DELETE FROM rate_limits WHERE reset_at<=?').run(now)

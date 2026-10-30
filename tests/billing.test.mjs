@@ -4,7 +4,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, dirname, resolve } from 'node:path'
 import { createHash } from 'node:crypto'
-import { Ledger, RESERVATION_MS } from '../server/services/billing/ledger.ts'
+import { Ledger, FREE_PER_DAY, INTERNAL_CREDIT_GRANT, RESERVATION_MS, digest, isInternalCreditCode } from '../server/services/billing/ledger.ts'
 import { signEpay, verifyEpay, parseNotification, moneyToFen, paymentForm, queryPayment } from '../server/services/billing/epay.ts'
 
 const config = { gateway: 'https://pay.xiaodouap.cn/submit.php', pid: '12345678', key: 'fixture-secret', siteUrl: 'https://example.com/project/fortune' }
@@ -19,8 +19,42 @@ function buy(db, walletId, pack = 'single') {
   return order
 }
 function spendFree(db, ip = '203.0.113.1', now = Date.now()) {
-  for (let i = 0; i < 5; i++) db.finish(db.reserve(ip, undefined, now), true, now)
+  for (let i = 0; i < FREE_PER_DAY; i++) db.finish(db.reserve(ip, undefined, now), true, now)
 }
+
+test('每日免费次数为 3，额度用完后不能继续免费预占', t => {
+  const { db } = fixture(t)
+  assert.equal(FREE_PER_DAY, 3)
+  spendFree(db, 'ip')
+  assert.equal(db.quota('ip').free, 0)
+  assert.throws(() => db.reserve('ip'), error => error.statusCode === 402)
+})
+
+test('内部码每次给同一匿名钱包增加 5 次，记录每笔发放', t => {
+  const { db, walletId } = fixture(t)
+  assert.equal(INTERNAL_CREDIT_GRANT, 5)
+  assert.equal(db.grantInternalCredits(walletId).wallet.credits, 5)
+  assert.equal(db.grantInternalCredits(walletId).wallet.credits, 10)
+  assert.equal(db.wallet(walletId).credits, 10)
+  assert.equal(db.db.prepare('SELECT COUNT(*) AS count FROM internal_credit_grants WHERE wallet_id=?').get(walletId).count, 2)
+})
+
+test('首次输入内部码时自动建立可恢复的匿名钱包', t => {
+  const db = new Ledger(':memory:'); t.after(() => db.close())
+  const grant = db.grantInternalCredits()
+  assert.equal(grant.wallet.credits, 5)
+  assert.equal(db.session(grant.token)?.id, grant.wallet.id)
+  assert.equal(db.recover(grant.recoveryCode).wallet.id, grant.wallet.id)
+})
+
+test('内部码只接受已配置的正确随机码，大小写不影响验证', () => {
+  const code = `INT-${'ABCD1234-'.repeat(5)}ABCD1234`
+  const hash = digest(code.replaceAll('-', ''))
+  assert.equal(isInternalCreditCode(code.toLowerCase(), hash), true)
+  assert.equal(isInternalCreditCode(code.replace('ABCD', 'FFFF'), hash), false)
+  assert.equal(isInternalCreditCode(code, undefined), false)
+  assert.equal(isInternalCreditCode(code, 'bad-hash'), false)
+})
 test('恢复码只以摘要保存，换码撤销旧恢复码和其他会话', t => {
   const { db, account, walletId } = fixture(t)
   assert.equal(db.session(account.token)?.id, walletId)
@@ -62,15 +96,15 @@ test('免费额度优先，付费次数不每日清零', t => {
   const id = db.reserve('ip', walletId, now)
   assert.equal(db.wallet(walletId).credits, 11)
   assert.equal(db.finish(id, true, now), true)
-  assert.deepEqual(db.quota('ip', walletId, now + 86400_000), { free: 5, paid: 11, remaining: 16, total: 5 })
+  assert.deepEqual(db.quota('ip', walletId, now + 86400_000), { free: 3, paid: 11, remaining: 14, total: 3 })
 })
 test('多个未完成请求也不能超用免费或付费额度', t => {
   const { db, walletId } = fixture(t); buy(db, walletId)
-  const held = Array.from({length: 6}, () => db.reserve('ip', walletId))
+  const held = Array.from({length: 4}, () => db.reserve('ip', walletId))
   assert.throws(() => db.reserve('ip', walletId), error => error.statusCode === 402)
   assert.equal(db.quota('ip', walletId).remaining, 0)
   for (const id of held) db.finish(id, false)
-  assert.equal(db.quota('ip', walletId).remaining, 6)
+  assert.equal(db.quota('ip', walletId).remaining, 4)
 })
 test('失败、取消重复释放只返还一次，成功后不能再释放', t => {
   const { db, walletId } = fixture(t); buy(db, walletId); spendFree(db)
@@ -86,7 +120,7 @@ test('跨上海零点失败只退还原日期的免费计数', t => {
   const before = Date.parse('2026-10-25T15:59:59Z'), after = before + 2000
   const old = db.reserve('ip', undefined, before)
   db.reserve('ip', undefined, after); db.finish(old, false, after)
-  assert.equal(db.quota('ip', undefined, after).free, 4)
+  assert.equal(db.quota('ip', undefined, after).free, 2)
 })
 test('重启后订单、会话和余额保留，崩溃遗留预占到期返还', t => {
   const dir = mkdtempSync(join(tmpdir(), 'fortune-ledger-'))
