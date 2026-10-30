@@ -1,7 +1,7 @@
 <template>
   <button
     :class="[
-      'inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+      'inline-flex min-h-11 items-center justify-center gap-1.5 rounded-sm px-5 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50',
       variantClass,
       sizeClass,
     ]"
@@ -20,10 +20,10 @@ const props = withDefaults(defineProps<{
 }>(), { variant: 'primary', size: 'md', disabled: false })
 
 const variantClass = computed(() => ({
-  primary: 'bg-purple-600 text-white hover:bg-purple-700 focus:ring-purple-500',
-  secondary: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-purple-500',
-  ghost: 'text-gray-600 hover:bg-gray-100 focus:ring-gray-400',
-  danger: 'bg-red-500 text-white hover:bg-red-600 focus:ring-red-500',
+  primary: 'bg-[#a84637] text-white hover:bg-[#843428]',
+  secondary: 'border border-[#1c302d] bg-transparent text-[#1c302d] hover:bg-[#e9e5d9]',
+  ghost: 'text-[#52615b] hover:bg-[#e9e5d9]',
+  danger: 'bg-[#1c302d] text-white hover:bg-[#2e4a44]',
 }[props.variant]))
 
 const sizeClass = computed(() => ({

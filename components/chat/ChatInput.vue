@@ -1,10 +1,11 @@
 <template>
-  <div class="border-t bg-white px-4 py-3">
+  <div class="composer">
+    <div class="composer-inner">
     <!-- 配额提示 -->
     <div
       v-if="quotaTotal > 0 && remainingQuota <= 2"
-      class="mb-2 flex items-center justify-center gap-1 text-xs"
-      :class="remainingQuota === 0 ? 'text-red-500' : 'text-amber-600'"
+      class="mb-2 flex items-center gap-1 text-xs"
+      :class="remainingQuota === 0 ? 'text-[#843428]' : 'text-[#52615b]'"
     >
       <span v-if="remainingQuota > 0">
         {{ t('chat.quotaRemaining', { n: remainingQuota }) }}
@@ -20,8 +21,9 @@
         v-model="inputText"
         :disabled="disabled || isQuotaExhausted"
         :placeholder="isQuotaExhausted ? t('chat.quotaExhaustedShort') : placeholder"
+        :aria-label="t('chat.inputPlaceholder')"
         rows="1"
-        class="flex-1 resize-none rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm text-gray-900 placeholder-gray-400 transition-colors focus:border-purple-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 disabled:opacity-50"
+        class="min-w-0 flex-1 disabled:opacity-50"
         :style="{ maxHeight: '120px' }"
         @keydown.enter.exact="handleSubmit"
         @input="autoResize"
@@ -42,6 +44,7 @@
         {{ t('chat.stop') }}
       </BaseButton>
     </form>
+    </div>
   </div>
 </template>
 

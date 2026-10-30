@@ -1,40 +1,20 @@
 <template>
-  <div
-    :class="[
-      'flex gap-3 px-4 py-3',
-      message.role === 'user' ? 'justify-end' : 'justify-start',
-    ]"
-  >
-    <!-- AI 头像 -->
-    <div v-if="message.role === 'assistant'" class="flex-shrink-0">
-      <div class="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 text-sm">
-        🔮
-      </div>
-    </div>
+  <div class="message-line" :class="message.role === 'user' ? 'user' : ''">
+    <div v-if="message.role === 'assistant'" class="message-role" aria-hidden="true">{{ locale === 'en' ? 'F' : '象' }}</div>
 
     <!-- 消息气泡 -->
     <div
-      :class="[
-        'max-w-[80%] rounded-2xl px-4 py-3',
-        message.role === 'user'
-          ? 'bg-purple-600 text-white'
-          : 'bg-white text-gray-800 shadow-sm border border-gray-100',
-      ]"
+      class="message-body"
     >
       <template v-if="message.role === 'user'">
-        <p class="whitespace-pre-wrap text-sm leading-relaxed">{{ message.content }}</p>
+        <p class="whitespace-pre-wrap">{{ message.content }}</p>
       </template>
       <template v-else>
         <MarkdownRenderer :content="message.content" />
       </template>
     </div>
 
-    <!-- 用户头像 -->
-    <div v-if="message.role === 'user'" class="flex-shrink-0">
-      <div class="flex h-8 w-8 items-center justify-center rounded-full bg-gray-200 text-sm">
-        👤
-      </div>
-    </div>
+    <div v-if="message.role === 'user'" class="message-role" aria-hidden="true">{{ locale === 'en' ? 'Q' : '问' }}</div>
   </div>
 </template>
 
@@ -44,4 +24,5 @@ import type { ChatMessage } from '~/types/chat'
 defineProps<{
   message: ChatMessage
 }>()
+const { locale } = useI18n()
 </script>

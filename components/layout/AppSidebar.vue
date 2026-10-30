@@ -1,6 +1,6 @@
 <template>
   <!-- 桌面端侧边栏 -->
-  <aside class="hidden w-64 flex-shrink-0 flex-col border-r bg-white lg:flex">
+  <aside class="sidebar hidden lg:flex">
     <SidebarContent />
   </aside>
 
@@ -12,14 +12,15 @@
         class="fixed inset-0 z-40 lg:hidden"
       >
         <div
-          class="absolute inset-0 bg-black/40 backdrop-blur-sm"
+          class="absolute inset-0 bg-[#1c302d]/40 backdrop-blur-sm"
           @click="$emit('closeMobile')"
         />
-        <aside class="absolute left-0 top-0 flex h-full w-72 flex-col border-r bg-white shadow-xl">
-          <div class="flex items-center justify-between border-b px-4 py-3">
-            <span class="font-semibold text-purple-700">{{ t('sidebar.menu') }}</span>
+        <aside class="sidebar absolute left-0 top-0 flex h-full w-72 shadow-xl">
+          <div class="flex items-center justify-between border-b border-[#d8d5c9] px-4 py-3">
+            <span class="font-display text-lg font-semibold text-[#1c302d]">{{ t('sidebar.history') }}</span>
             <button
-              class="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              class="quiet-button"
+              :aria-label="t('chat.dismiss')"
               @click="$emit('closeMobile')"
             >
               <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -27,7 +28,7 @@
               </svg>
             </button>
           </div>
-          <SidebarContent />
+          <SidebarContent @select-session="$emit('closeMobile')" />
         </aside>
       </div>
     </Transition>

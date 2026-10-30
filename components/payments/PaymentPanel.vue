@@ -1,24 +1,24 @@
 <template>
-  <div class="border-b bg-purple-50 px-4 py-2 text-sm">
-    <div class="flex flex-wrap items-center justify-between gap-2">
-      <span class="text-purple-800">{{ copy.free }} {{ overview?.quota.free ?? '—' }} · {{ copy.paid }} {{ overview?.quota.paid ?? '—' }}</span>
-      <div class="flex gap-3">
-        <button class="text-gray-600 hover:underline" :disabled="busy" @click="run(async () => { await refresh(); emit('changed') })">{{ copy.refreshBalance }}</button>
-        <button class="font-medium text-purple-700 hover:underline" :disabled="busy" @click="openShop">{{ copy.buy }}</button>
-        <button class="text-gray-600 hover:underline" @click="show = true; restoring = true">{{ copy.restore }}</button>
+  <div class="quota-strip">
+    <div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-1">
+      <span>{{ copy.free }} {{ overview?.quota.free ?? '—' }} <span class="mx-1 text-[#a9aea4]">/</span> {{ copy.paid }} {{ overview?.quota.paid ?? '—' }}</span>
+      <div class="flex flex-wrap items-center gap-x-4">
+        <button class="min-h-8" :disabled="busy" @click="run(async () => { await refresh(); emit('changed') })">{{ copy.refreshBalance }}</button>
+        <button class="min-h-8 font-semibold" :disabled="busy" @click="openShop">{{ copy.buy }}</button>
+        <button class="min-h-8" @click="show = true; restoring = true">{{ copy.restore }}</button>
       </div>
     </div>
     <p v-if="activeOrder" class="mt-2 text-xs text-gray-600" role="status">
       {{ orderStatus === 'paid' ? copy.received : orderStatus === 'refunded' ? copy.refunded : copy.pending }}
-      <button class="ml-2 text-purple-700 underline" :disabled="checking" @click="checkOrder">{{ copy.check }}</button>
+      <button class="ml-2 underline" :disabled="checking" @click="checkOrder">{{ copy.check }}</button>
     </p>
     <p v-if="error && !show" class="mt-2 text-xs text-red-600" role="alert">{{ error }}</p>
 
     <BaseModal v-model="show">
       <div class="max-h-[80vh] overflow-y-auto">
         <div class="mb-4 flex items-center justify-between">
-          <h2 class="text-lg font-semibold text-gray-900">{{ restoring ? copy.restore : copy.buy }}</h2>
-          <button class="rounded px-2 py-1 text-gray-500" :aria-label="copy.close" @click="show = false">✕</button>
+          <h2 class="font-display text-2xl font-semibold text-[#1c302d]">{{ restoring ? copy.restore : copy.buy }}</h2>
+          <button class="quiet-button" :aria-label="copy.close" @click="show = false">✕</button>
         </div>
         <p v-if="error" class="mb-3 rounded-lg bg-red-50 p-3 text-sm text-red-700" role="alert">{{ error }}</p>
         <form v-if="restoring" class="space-y-4" @submit.prevent="restore">
@@ -26,19 +26,19 @@
           <label class="block text-sm font-medium text-gray-700" for="recovery-input">{{ copy.code }}</label>
           <textarea id="recovery-input" v-model="restoreCode" autocomplete="off" spellcheck="false" rows="3"
             class="w-full rounded-lg border p-3 font-mono text-sm" :placeholder="copy.code" />
-          <button type="submit" class="w-full rounded-xl bg-purple-600 py-3 text-white disabled:opacity-50" :disabled="busy || !restoreCode.trim()">{{ copy.restore }}</button>
-          <button type="button" class="text-sm text-purple-700 underline" @click="restoring = false; openShop()">{{ copy.back }}</button>
+          <button type="submit" class="min-h-11 w-full bg-[#a84637] py-3 text-white hover:bg-[#843428] disabled:opacity-50" :disabled="busy || !restoreCode.trim()">{{ copy.restore }}</button>
+          <button type="button" class="min-h-11 text-sm text-[#a84637] underline" @click="restoring = false; openShop()">{{ copy.back }}</button>
         </form>
         <div v-else-if="onePayCheckout" class="space-y-3 text-sm">
           <p v-if="onePayConfirmed" class="rounded-lg bg-green-50 p-3 text-green-800" role="status">{{ copy.received }}</p>
           <p class="text-gray-600">{{ copy.alipayCheckoutHelp }}</p>
           <iframe :src="onePayCheckout.qrUrl" :title="copy.alipayQrTitle" referrerpolicy="no-referrer"
             class="h-80 w-full rounded-lg border bg-white" />
-          <a :href="onePayCheckout.appUrl" class="block w-full rounded-xl bg-purple-600 py-3 text-center font-medium text-white">{{ copy.openAlipay }}</a>
-          <a :href="onePayCheckout.qrUrl" target="_blank" rel="noopener noreferrer" class="block text-center text-purple-700 underline">{{ copy.openQrPage }}</a>
-          <button class="w-full rounded-xl border py-3 text-purple-700 disabled:opacity-50" :disabled="busy"
+          <a :href="onePayCheckout.appUrl" class="block w-full bg-[#a84637] py-3 text-center font-medium text-white">{{ copy.openAlipay }}</a>
+          <a :href="onePayCheckout.qrUrl" target="_blank" rel="noopener noreferrer" class="block text-center text-[#a84637] underline">{{ copy.openQrPage }}</a>
+          <button class="min-h-11 w-full border border-[#1c302d] py-3 text-[#1c302d] disabled:opacity-50" :disabled="busy"
             @click="run(async () => { await refresh(); emit('changed') })">{{ copy.refreshBalance }}</button>
-          <button class="text-purple-700 underline" @click="onePayCheckout = null">{{ copy.back }}</button>
+          <button class="min-h-11 text-[#a84637] underline" @click="onePayCheckout = null">{{ copy.back }}</button>
         </div>
         <div v-else class="space-y-4">
           <p class="text-sm text-gray-600">{{ copy.rules }}</p>
@@ -49,19 +49,19 @@
             <p class="font-semibold text-amber-900">{{ copy.saveTitle }}</p>
             <p class="text-xs text-amber-800">{{ copy.saveHelp }}</p>
             <pre class="whitespace-pre-wrap break-all rounded bg-white p-3 font-mono text-sm text-gray-900">{{ newCode }}</pre>
-            <button class="text-sm text-purple-700 underline" @click="copyCode">{{ copied ? copy.copied : copy.copy }}</button>
+            <button class="min-h-11 text-sm text-[#a84637] underline" @click="copyCode">{{ copied ? copy.copied : copy.copy }}</button>
             <label class="flex items-start gap-2 pt-2 text-sm text-gray-700">
               <input v-model="savedCheck" type="checkbox" class="mt-1" :disabled="busy" @change="confirmSaved">
               {{ copy.saved }}
             </label>
           </div>
-          <button v-else-if="overview?.hasWallet" class="text-xs text-purple-700 underline" :disabled="busy" @click="rotate">{{ copy.replaceCode }}</button>
+          <button v-else-if="overview?.hasWallet" class="min-h-11 text-xs text-[#a84637] underline" :disabled="busy" @click="rotate">{{ copy.replaceCode }}</button>
           <fieldset class="grid grid-cols-3 gap-2">
             <legend class="sr-only">{{ copy.package }}</legend>
-            <label v-for="pack in overview?.packages ?? []" :key="pack.id" class="cursor-pointer rounded-xl border p-3 text-center"
-              :class="selected === pack.id ? 'border-purple-600 bg-purple-50 ring-1 ring-purple-600' : 'border-gray-200'">
+            <label v-for="pack in overview?.packages ?? []" :key="pack.id" class="cursor-pointer border p-3 text-center"
+              :class="selected === pack.id ? 'border-[#a84637] bg-[#f4e6e0] ring-1 ring-[#a84637]' : 'border-[#d8d5c9]'">
               <input v-model="selected" type="radio" name="reading-package" :value="pack.id" class="sr-only">
-              <span class="block text-lg font-bold text-purple-800">¥{{ (pack.amountFen / 100).toFixed(pack.amountFen % 100 ? 2 : 0) }}</span>
+              <span class="block text-lg font-bold text-[#1c302d]">¥{{ (pack.amountFen / 100).toFixed(pack.amountFen % 100 ? 2 : 0) }}</span>
               <span class="text-xs text-gray-600">{{ pack.credits }} {{ copy.credits }}</span>
             </label>
           </fieldset>
@@ -72,7 +72,7 @@
             </select>
           </label>
           <p v-if="!inWeChat" class="text-xs text-gray-500">{{ copy.wechatHelp }}</p>
-          <button class="w-full rounded-xl bg-purple-600 py-3 font-medium text-white disabled:opacity-50"
+          <button class="min-h-11 w-full bg-[#a84637] py-3 font-medium text-white hover:bg-[#843428] disabled:opacity-50"
             :disabled="busy || !overview?.recoverySaved || !canPurchase" @click="purchase">{{ busy ? copy.working : copy.pay }}</button>
           <p v-if="!overview?.recoverySaved" class="text-xs text-amber-700">{{ copy.mustSave }}</p>
           <div v-if="overview?.orders.length" class="border-t pt-3">

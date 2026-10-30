@@ -1,5 +1,5 @@
 <template>
-  <div class="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-strong:text-gray-900 prose-li:text-gray-700" v-html="renderedMarkdown" />
+  <div class="prose prose-sm max-w-none prose-headings:text-[#1c302d] prose-p:text-[#1c302d] prose-strong:text-[#1c302d] prose-li:text-[#1c302d]" v-html="renderedMarkdown" />
 </template>
 
 <script setup lang="ts">

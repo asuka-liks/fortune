@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-4 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
+  <div class="reading-form space-y-6">
     <div class="flex items-center gap-2">
       <span class="text-lg">✨</span>
       <span class="font-semibold text-gray-800">{{ t('astrology.title') }}</span>
@@ -8,16 +8,16 @@
     <div class="space-y-3">
       <!-- 星座选择 -->
       <div>
-        <label class="mb-1 block text-xs font-medium text-gray-600">{{ t('astrology.selectSign') }}</label>
-        <div class="grid grid-cols-4 gap-2">
+        <label class="mb-2 block font-medium">{{ t('astrology.selectSign') }}</label>
+        <div class="grid grid-cols-3 gap-2 sm:grid-cols-4">
           <button
             v-for="sign in zodiacSigns"
             :key="sign.value"
             :class="[
-              'rounded-lg border px-2 py-2 text-center text-xs transition-all',
+              'min-h-11 rounded-sm border px-2 py-2 text-center text-xs transition-colors',
               form.zodiacSign === sign.value
-                ? 'border-indigo-400 bg-indigo-100 text-indigo-700'
-                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300',
+                ? 'border-[#a84637] bg-[#f4e6e0] text-[#843428]'
+                : 'border-[#d8d5c9] bg-[#fffefa] text-[#52615b] hover:border-[#a84637]',
             ]"
             @click="form.zodiacSign = sign.value"
           >
@@ -29,7 +29,7 @@
         <div class="mt-2 text-center">
           <button
             v-if="!showBirthdayPicker"
-            class="text-xs text-indigo-500 hover:text-indigo-700 underline transition-colors"
+            class="min-h-11 text-xs text-[#a84637] underline underline-offset-4 hover:text-[#843428]"
             @click="showBirthdayPicker = true"
           >
             {{ t('astrology.findByBirthday') }}
@@ -37,7 +37,7 @@
           <div v-else class="flex items-center gap-1.5">
             <select
               v-model="birthMonth"
-              class="h-8 rounded border border-gray-300 bg-white px-2 text-xs text-gray-700 focus:border-indigo-400 focus:outline-none"
+              class="min-h-11 rounded-sm border border-[#d8d5c9] bg-[#fffefa] px-2 text-xs text-[#1c302d] focus:border-[#a84637] focus:outline-none"
               @change="tryMatchSign"
             >
               <option value="0" disabled>{{ t('astrology.birthMonth') }}</option>
@@ -45,7 +45,7 @@
             </select>
             <select
               v-model="birthDay"
-              class="h-8 rounded border border-gray-300 bg-white px-2 text-xs text-gray-700 focus:border-indigo-400 focus:outline-none"
+              class="min-h-11 rounded-sm border border-[#d8d5c9] bg-[#fffefa] px-2 text-xs text-[#1c302d] focus:border-[#a84637] focus:outline-none"
               @change="tryMatchSign"
             >
               <option value="0" disabled>{{ t('astrology.birthDay') }}</option>
@@ -61,7 +61,7 @@
           </div>
           <p
             v-if="showBirthdayPicker && matchedSignName"
-            class="mt-1 text-xs text-indigo-600"
+            class="mt-1 text-xs text-[#a84637]"
           >
             → {{ matchedSignName }}
           </p>
@@ -70,16 +70,16 @@
 
       <!-- 周期选择 -->
       <div>
-        <label class="mb-1 block text-xs font-medium text-gray-600">{{ t('astrology.period') }}</label>
+        <label class="mb-2 block font-medium">{{ t('astrology.period') }}</label>
         <div class="flex gap-2">
           <button
             v-for="p in periods"
             :key="p.value"
             :class="[
-              'flex-1 rounded-lg border px-3 py-2 text-sm transition-all',
+              'min-h-11 flex-1 rounded-sm border px-3 py-2 text-sm transition-colors',
               form.period === p.value
-                ? 'border-indigo-400 bg-indigo-100 text-indigo-700'
-                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300',
+                ? 'border-[#a84637] bg-[#f4e6e0] text-[#843428]'
+                : 'border-[#d8d5c9] bg-[#fffefa] text-[#52615b] hover:border-[#a84637]',
             ]"
             @click="form.period = p.value"
           >

@@ -1,8 +1,16 @@
 <template>
   <div class="flex h-full flex-col">
     <PaymentPanel :remaining-quota="remainingQuota" @changed="fetchQuota" />
-    <!-- 技能表单区域（侧边栏选技能后显示） -->
-    <div v-if="showSkillForm" class="border-b bg-white px-4 py-3">
+    <div v-if="showSelection" class="page-stage">
+      <EmptyState @select="handleSelectSkill" />
+    </div>
+    <!-- 选中技能后在主区域填写，不再挤占聊天顶部 -->
+    <div v-else-if="showSkillForm" class="page-stage">
+      <div class="form-stage">
+        <div class="form-stage-head">
+          <span class="eyebrow">{{ locale === 'en' ? 'PREPARE YOUR READING' : '开始解读前' }}</span>
+          <button class="quiet-button" @click="skillStore.deactivateSkill()">← {{ locale === 'en' ? 'All methods' : '返回选择' }}</button>
+        </div>
       <BaZiForm
         v-if="skillStore.activeSkillId === 'bazi'"
         @submit="handleSkillSubmit"
@@ -23,10 +31,11 @@
         v-else-if="skillStore.activeSkillId === 'fun'"
         @submit="handleSkillSubmit"
       />
+      </div>
     </div>
 
     <!-- 聊天容器 -->
-    <ChatContainer
+    <ChatContainer v-else
       :messages="chatStore.messages"
       :is-streaming="chatStore.isStreaming"
       :error="chatStore.error"
@@ -36,7 +45,7 @@
       :quota-total="quotaTotal"
       @send="handleSend"
       @stop="handleStop"
-      @change-skill="skillStore.deactivateSkill()"
+      @change-skill="handleChangeSkill"
       @dismiss-error="chatStore.setError(null)"
     />
   </div>
@@ -61,7 +70,12 @@ watch(
   { deep: true },
 )
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+const choosingAgain = ref(false)
+
+const showSelection = computed(() => choosingAgain.value || (!skillStore.activeSkillId && chatStore.messages.length === 0))
+
+watch(() => chatStore.activeSessionId, () => { choosingAgain.value = false })
 
 const activeSkillName = computed(() => {
   if (!skillStore.activeSkillId) return undefined
@@ -72,6 +86,16 @@ const activeSkillName = computed(() => {
 const showSkillForm = computed(
   () => skillStore.activeSkillId && !skillStore.isSkillReady,
 )
+
+function handleSelectSkill(id: import('~/types/skill').SkillId) {
+  choosingAgain.value = false
+  skillStore.activateSkill(id)
+}
+
+function handleChangeSkill() {
+  skillStore.deactivateSkill()
+  choosingAgain.value = true
+}
 
 const autoStartKeys: Record<string, string> = {
   bazi: 'chat.autoStartBazi',

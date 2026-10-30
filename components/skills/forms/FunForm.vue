@@ -1,5 +1,5 @@
 <template>
-  <div class="max-h-[55vh] space-y-4 overflow-y-auto rounded-xl border border-amber-200 bg-amber-50/50 p-4">
+  <div class="reading-form space-y-6">
     <div class="flex items-center gap-2">
       <span class="text-lg">🎴</span>
       <span class="font-semibold text-gray-800">{{ t('fun.title') }}</span>
@@ -8,8 +8,9 @@
     <div class="space-y-3">
       <!-- 问题输入 -->
       <div>
-        <label class="mb-1 block text-xs font-medium text-gray-600">{{ t('fun.question') }}</label>
+        <label for="fun-question" class="mb-2 block font-medium">{{ t('fun.question') }}</label>
         <BaseInput
+          id="fun-question"
           v-model="question"
           :placeholder="t('fun.questionPlaceholder')"
         />
@@ -26,20 +27,20 @@
       </BaseButton>
 
       <!-- 抽牌结果 -->
-      <div v-if="drawResult" class="space-y-3 rounded-lg border border-amber-300 bg-white p-3">
-        <div class="text-sm font-medium text-amber-800">{{ t('fun.drawResult') }}</div>
+      <div v-if="drawResult" class="space-y-3 border border-[#d8d5c9] bg-[#fffefa] p-4">
+        <div class="text-sm font-medium text-[#1c302d]">{{ t('fun.drawResult') }}</div>
 
         <!-- 游戏牌 -->
         <div class="space-y-2">
           <div
             v-for="(card, idx) in drawResult.cards"
             :key="idx"
-            class="flex items-center gap-2 rounded bg-amber-50 px-3 py-2 text-sm"
+            class="flex items-center gap-2 border-b border-[#d8d5c9] px-3 py-2 text-sm"
           >
             <span
               :class="card.position === '逆位' ? 'rotate-180' : ''"
               class="text-lg"
-            >🃏</span>
+            >牌</span>
             <div>
               <div class="font-medium text-gray-800">
                 {{ card.position }} · {{ card.suit }}{{ card.pointName }} · {{ card.name }}
@@ -49,11 +50,11 @@
           </div>
 
           <!-- 身份/武将牌 -->
-          <div class="flex items-center gap-2 rounded bg-amber-50 px-3 py-2 text-sm">
+          <div class="flex items-center gap-2 border-b border-[#d8d5c9] px-3 py-2 text-sm">
             <span
               :class="drawResult.third.position === '逆位' ? 'rotate-180' : ''"
               class="text-lg"
-            >{{ drawResult.third.type === 'officer' ? '👤' : '🏷️' }}</span>
+            >{{ drawResult.third.type === 'officer' ? '将' : '身' }}</span>
             <div>
               <div class="font-medium text-gray-800">
                 {{ drawResult.third.position }} · {{ drawResult.third.type === 'officer' ? '武将' : '身份' }}：{{ drawResult.third.displayName }}
@@ -66,12 +67,12 @@
         </div>
 
         <!-- 卦象摘要 -->
-        <div class="rounded bg-purple-50 px-3 py-2 text-sm">
-          <div class="font-medium text-purple-800">
+        <div class="bg-[#e9ebe4] px-3 py-2 text-sm">
+          <div class="font-medium text-[#1c302d]">
             {{ t('fun.hexagram') }}：{{ hexagramInfo?.originalHexagram?.nameCN }}
             <span v-if="hexagramInfo?.derivedHexagram"> → {{ hexagramInfo.derivedHexagram.nameCN }}</span>
           </div>
-          <div class="text-xs text-purple-600 mt-1">
+          <div class="mt-1 text-xs text-[#52615b]">
             {{ hexagramInfo?.upperTrigramCalc }}，{{ hexagramInfo?.lowerTrigramCalc }}
             <br v-if="hexagramInfo?.changingLine">{{ hexagramInfo?.changingLineCalc }}
           </div>

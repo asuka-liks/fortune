@@ -2,12 +2,12 @@ import type { TranslationMap } from './index'
 
 const en: TranslationMap = {
   // ==================== App Level ====================
-  'app.title': '🔮 AI Fortune Teller',
+  'app.title': 'Fortune · Readings',
   'app.subtitle': 'AI Reading · Entertainment Only',
-  'app.footer': 'AI Fortune Teller · For Entertainment Only · Be Rational',
+  'app.footer': 'Fortune · AI Readings · For Entertainment Only',
 
   // ==================== Sidebar ====================
-  'sidebar.menu': '🔮 Fortune Menu',
+  'sidebar.menu': 'Menu',
   'sidebar.history': 'Chat History',
   'sidebar.newChat': '+ New Chat',
   'sidebar.newChatDefault': 'New Chat',
@@ -19,8 +19,8 @@ const en: TranslationMap = {
   'chat.dismiss': 'Dismiss',
   'chat.inputPlaceholder': 'Type your question...',
   'chat.selectSkillFirst': 'Please select a fortune-telling mode first',
-  'chat.quotaRemaining': '🔮 {n} free conversations remaining',
-  'chat.quotaExhausted': '🚫 Free conversations used up. Paid features coming soon.',
+  'chat.quotaRemaining': '{n} free conversations remaining',
+  'chat.quotaExhausted': 'Free conversations used up. Paid features coming soon.',
   'chat.quotaExhaustedShort': 'No free conversations left',
   'chat.send': 'Send',
   'chat.stop': 'Stop',
@@ -33,7 +33,7 @@ const en: TranslationMap = {
   'chat.autoStartFun': 'Start reading',
 
   // ==================== Skill Selection ====================
-  'skill.selectorTitle': 'Choose Fortune Type',
+  'skill.selectorTitle': 'Choose a reading',
   'skill.bazi.name': 'BaZi (Eight Characters)',
   'skill.bazi.desc': 'Traditional Chinese destiny analysis based on birth date and time',
   'skill.astrology.name': 'Astrology',
@@ -82,7 +82,7 @@ const en: TranslationMap = {
   'tarot.celticCross': 'Celtic Cross',
   'tarot.celticCrossDesc': 'Full 10-Card Reading',
   'tarot.drawing': 'Drawing...',
-  'tarot.startDraw': '🃏 Draw Cards',
+  'tarot.startDraw': 'Draw Cards',
   'tarot.drawResult': 'Draw Results',
   'tarot.upright': 'Upright',
   'tarot.reversed': 'Reversed',
@@ -101,7 +101,7 @@ const en: TranslationMap = {
   'bagua.question': 'What do you want to ask? (Optional)',
   'bagua.questionPlaceholder': 'e.g. My birth chart is Jia-Shen Ding-Mao Gui-Si Jia-Yin, how is my career developing?',
   'bagua.shaking': 'Shaking coins...',
-  'bagua.startShake': '🔮 Shake Coins',
+  'bagua.startShake': 'Shake Coins',
   'bagua.shakeResult': 'Shake Results',
   'bagua.shakeIndex': 'Shake {n}',
   'bagua.changing': 'Changing',
@@ -115,11 +115,11 @@ const en: TranslationMap = {
   'bagua.startReading': 'Start Divination',
 
   // ==================== Fun Divination ====================
-  'fun.title': '🎴 Fun Divination · Three Kingdoms Kill',
+  'fun.title': 'Fun Divination · Three Kingdoms Kill',
   'fun.question': 'What do you want to ask? (Optional)',
   'fun.questionPlaceholder': 'e.g. Should I get back with my ex?',
   'fun.drawing': 'Drawing...',
-  'fun.startDraw': '🃏 Draw Cards',
+  'fun.startDraw': 'Draw Cards',
   'fun.drawResult': 'Draw Results',
   'fun.hexagram': 'Hexagram',
   'fun.startReading': 'Start Reading',

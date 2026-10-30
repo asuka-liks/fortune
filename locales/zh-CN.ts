@@ -2,12 +2,12 @@ import type { TranslationMap } from './index'
 
 const zhCN: TranslationMap = {
   // ==================== 应用级 ====================
-  'app.title': '🔮 AI 算命',
+  'app.title': '观象 · AI 解读',
   'app.subtitle': 'AI 解读 · 仅供娱乐',
-  'app.footer': 'AI 算命 · 仅供娱乐参考 · 理性看待',
+  'app.footer': '观象 · AI 解读 · 仅供娱乐参考 · 理性看待',
 
   // ==================== 侧边栏 ====================
-  'sidebar.menu': '🔮 算命菜单',
+  'sidebar.menu': '菜单',
   'sidebar.history': '对话历史',
   'sidebar.newChat': '+ 新对话',
   'sidebar.newChatDefault': '新对话',
@@ -19,8 +19,8 @@ const zhCN: TranslationMap = {
   'chat.dismiss': '关闭',
   'chat.inputPlaceholder': '输入你的问题...',
   'chat.selectSkillFirst': '请先在左侧选择一种算命方式',
-  'chat.quotaRemaining': '🔮 剩余 {n} 次免费对话',
-  'chat.quotaExhausted': '🚫 免费次数已用完，敬请期待更新',
+  'chat.quotaRemaining': '剩余 {n} 次免费对话',
+  'chat.quotaExhausted': '免费次数已用完，敬请期待更新',
   'chat.quotaExhaustedShort': '免费次数已用完',
   'chat.send': '发送',
   'chat.stop': '停止',
@@ -33,7 +33,7 @@ const zhCN: TranslationMap = {
   'chat.autoStartFun': '开始解读',
 
   // ==================== 技能选择 ====================
-  'skill.selectorTitle': '选择算命类型',
+  'skill.selectorTitle': '选择解读方式',
   'skill.bazi.name': '八字命理',
   'skill.bazi.desc': '基于生辰八字的传统命理分析，洞察人生运势',
   'skill.astrology.name': '星座运势',
@@ -82,7 +82,7 @@ const zhCN: TranslationMap = {
   'tarot.celticCross': '凯尔特十字',
   'tarot.celticCrossDesc': '十张全面解读',
   'tarot.drawing': '抽牌中...',
-  'tarot.startDraw': '🃏 开始抽牌',
+  'tarot.startDraw': '开始抽牌',
   'tarot.drawResult': '抽牌结果',
   'tarot.upright': '正位',
   'tarot.reversed': '逆位',
@@ -101,7 +101,7 @@ const zhCN: TranslationMap = {
   'bagua.question': '你想问什么？（可选）',
   'bagua.questionPlaceholder': '例如：我的生辰八字是甲申丁卯癸巳甲寅，最近事业发展如何？',
   'bagua.shaking': '摇卦中...',
-  'bagua.startShake': '🔮 一键摇卦',
+  'bagua.startShake': '一键摇卦',
   'bagua.shakeResult': '摇卦结果',
   'bagua.shakeIndex': '第{n}摇',
   'bagua.changing': '动爻',
@@ -115,11 +115,11 @@ const zhCN: TranslationMap = {
   'bagua.startReading': '开始推算',
 
   // ==================== 趣味占卜 ====================
-  'fun.title': '🎴 趣味占卜 · 三国杀卡牌',
+  'fun.title': '趣味占卜 · 三国杀卡牌',
   'fun.question': '你想问什么？（可选）',
   'fun.questionPlaceholder': '例如：我该不该去找他复合？',
   'fun.drawing': '抽牌中...',
-  'fun.startDraw': '🃏 抽牌',
+  'fun.startDraw': '抽牌',
   'fun.drawResult': '抽牌结果',
   'fun.hexagram': '卦象',
   'fun.startReading': '开始解读',

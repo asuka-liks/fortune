@@ -1,34 +1,32 @@
 <template>
   <Teleport to="body">
     <Transition name="lang-modal">
-      <div
-        v-if="visible"
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-      >
-        <div class="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
-          <div class="mb-6 text-center">
-            <h2 class="text-2xl font-bold text-gray-800">Language</h2>
-            <p class="mt-1 text-sm text-gray-400">Choose your language / 选择你的语言</p>
+      <div v-if="visible" class="fixed inset-0 z-50 flex items-center justify-center bg-[#1c302d]/50 px-4 backdrop-blur-sm">
+        <div class="w-full max-w-sm border border-[#d8d5c9] bg-[#fbf9f4] p-7 shadow-2xl">
+          <div class="mb-7 text-center">
+            <div class="mx-auto mb-4 grid h-12 w-12 place-items-center rounded-full border border-[#1c302d] font-serif text-xl text-[#a84637]" aria-hidden="true">✧</div>
+            <h2 class="font-display text-2xl font-semibold text-[#1c302d]">Language / 语言</h2>
+            <p class="mt-2 text-sm text-[#52615b]">Choose your language / 选择你的语言</p>
           </div>
 
           <div class="space-y-3">
             <button
               v-for="opt in localeOptions"
               :key="opt.value"
-              class="flex w-full items-center gap-4 rounded-xl border-2 px-5 py-4 text-left transition-all hover:border-purple-300 hover:bg-purple-50"
+              class="flex min-h-16 w-full items-center gap-4 border px-5 py-3 text-left transition-colors hover:border-[#a84637] hover:bg-[#f4e6e0]"
               :class="selected === opt.value
-                ? 'border-purple-500 bg-purple-50'
-                : 'border-gray-200'"
+                ? 'border-[#a84637] bg-[#f4e6e0]'
+                : 'border-[#d8d5c9]'"
               @click="selected = opt.value"
             >
-              <span class="text-2xl">{{ opt.value === 'zh-CN' ? '🇨🇳' : '🇺🇸' }}</span>
+              <span class="font-display w-8 text-lg text-[#a84637]">{{ opt.value === 'zh-CN' ? '中' : 'EN' }}</span>
               <div class="flex-1">
-                <div class="font-semibold text-gray-800">{{ opt.label }}</div>
-                <div class="text-sm text-gray-400">{{ opt.nativeLabel }}</div>
+                <div class="font-semibold text-[#1c302d]">{{ opt.label }}</div>
+                <div class="text-sm text-[#52615b]">{{ opt.nativeLabel }}</div>
               </div>
               <div
                 v-if="selected === opt.value"
-                class="flex h-6 w-6 items-center justify-center rounded-full bg-purple-500 text-white text-sm"
+                class="flex h-6 w-6 items-center justify-center rounded-full bg-[#a84637] text-sm text-white"
               >
                 ✓
               </div>
@@ -36,7 +34,7 @@
           </div>
 
           <button
-            class="mt-6 w-full rounded-xl bg-purple-500 py-3 font-semibold text-white transition-colors hover:bg-purple-600 disabled:opacity-50"
+            class="mt-6 min-h-12 w-full bg-[#a84637] py-3 font-semibold text-white transition-colors hover:bg-[#843428] disabled:opacity-50"
             @click="handleConfirm"
           >
             {{ selected === 'zh-CN' ? '开始使用' : 'Get Started' }}

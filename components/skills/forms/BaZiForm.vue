@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-4 rounded-xl border border-purple-200 bg-purple-50/50 p-4">
+  <div class="reading-form space-y-6">
     <div class="flex items-center gap-2">
       <span class="text-lg">☯️</span>
       <span class="font-semibold text-gray-800">{{ t('bazi.title') }}</span>
@@ -8,8 +8,9 @@
     <div class="space-y-3">
       <!-- 出生日期 -->
       <div>
-        <label class="mb-1 block text-xs font-medium text-gray-600">{{ t('bazi.birthDate') }}</label>
+        <label for="bazi-birth-date" class="mb-2 block font-medium">{{ t('bazi.birthDate') }}</label>
         <BaseInput
+          id="bazi-birth-date"
           v-model="form.birthDate"
           type="date"
           placeholder="1990-05-20"
@@ -18,8 +19,9 @@
 
       <!-- 出生时辰 -->
       <div>
-        <label class="mb-1 block text-xs font-medium text-gray-600">{{ t('bazi.birthTime') }}</label>
+        <label for="bazi-birth-time" class="mb-2 block font-medium">{{ t('bazi.birthTime') }}</label>
         <BaseSelect
+          id="bazi-birth-time"
           v-model="form.birthTime"
           :options="birthTimeOptions"
           :placeholder="t('bazi.selectTime')"
@@ -28,14 +30,14 @@
 
       <!-- 性别 -->
       <div>
-        <label class="mb-1 block text-xs font-medium text-gray-600">{{ t('bazi.gender') }}</label>
+        <label class="mb-2 block font-medium">{{ t('bazi.gender') }}</label>
         <div class="flex gap-2">
           <button
             :class="[
-              'flex-1 rounded-lg border px-3 py-2 text-sm transition-all',
+              'min-h-11 flex-1 rounded-sm border px-3 py-2 text-sm transition-colors',
               form.gender === genderMaleValue
-                ? 'border-blue-400 bg-blue-50 text-blue-700'
-                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300',
+                ? 'border-[#a84637] bg-[#f4e6e0] text-[#843428]'
+                : 'border-[#d8d5c9] bg-[#fffefa] text-[#52615b] hover:border-[#a84637]',
             ]"
             @click="form.gender = genderMaleValue"
           >
@@ -43,10 +45,10 @@
           </button>
           <button
             :class="[
-              'flex-1 rounded-lg border px-3 py-2 text-sm transition-all',
+              'min-h-11 flex-1 rounded-sm border px-3 py-2 text-sm transition-colors',
               form.gender === genderFemaleValue
-                ? 'border-pink-400 bg-pink-50 text-pink-700'
-                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300',
+                ? 'border-[#a84637] bg-[#f4e6e0] text-[#843428]'
+                : 'border-[#d8d5c9] bg-[#fffefa] text-[#52615b] hover:border-[#a84637]',
             ]"
             @click="form.gender = genderFemaleValue"
           >

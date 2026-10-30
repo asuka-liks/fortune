@@ -1,28 +1,36 @@
 <template>
-  <header class="flex items-center justify-between border-b bg-white px-4 py-3 shadow-sm">
+  <header class="app-header">
     <div class="flex items-center gap-3">
       <!-- 移动端菜单按钮 -->
       <button
-        class="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 lg:hidden"
+        class="quiet-button lg:hidden"
+        :aria-label="t('sidebar.history')"
         @click="$emit('toggleSidebar')"
       >
         <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
-      <h1 class="text-lg font-bold text-purple-700">{{ t('app.title') }}</h1>
+      <span class="brand-mark" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><circle cx="12" cy="12" r="7"/><path d="M12 1v4m0 14v4M1 12h4m14 0h4M7 17 17 7"/></svg>
+      </span>
+      <div class="flex items-baseline gap-3">
+        <span class="brand-name">{{ localeStore.locale === 'en' ? 'FORTUNE' : '观象' }}</span>
+        <span class="hidden text-[10px] tracking-[.18em] text-[#738077] sm:inline">AI READINGS</span>
+      </div>
     </div>
     <div class="flex items-center gap-2">
-      <span class="hidden text-xs text-gray-400 sm:block">{{ t('app.subtitle') }}</span>
+      <span class="hidden text-xs text-[#738077] md:block">{{ t('app.subtitle') }}</span>
 
       <!-- 语言切换 -->
       <div ref="langMenuRef" class="relative">
         <button
-          class="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+          class="quiet-button"
+          :aria-label="localeStore.locale === 'en' ? 'Change language' : '切换语言'"
           @click.stop="showLangMenu = !showLangMenu"
         >
-          <span>🌐</span>
-          <span class="hidden sm:inline">{{ localeStore.locale === 'en' ? 'EN' : '中文' }}</span>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg>
+          <span>{{ localeStore.locale === 'en' ? 'EN' : '中文' }}</span>
           <svg
             class="h-3.5 w-3.5 transition-transform"
             :class="showLangMenu ? 'rotate-180' : ''"
@@ -36,18 +44,18 @@
         <Transition name="lang-drop">
           <div
             v-if="showLangMenu"
-            class="absolute right-0 top-full mt-1 w-36 rounded-lg border bg-white py-1 shadow-lg"
+            class="absolute right-0 top-full z-30 mt-1 w-36 border border-[#d8d5c9] bg-[#fbf9f4] py-1 shadow-lg"
           >
             <button
               v-for="opt in localeOptions"
               :key="opt.value"
-              class="flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-gray-50"
-              :class="localeStore.locale === opt.value ? 'text-purple-600 font-semibold' : 'text-gray-600'"
+              class="flex min-h-11 w-full items-center gap-2 px-3 py-2 text-sm transition-colors hover:bg-[#e9e5d9]"
+              :class="localeStore.locale === opt.value ? 'text-[#a84637] font-semibold' : 'text-[#52615b]'"
               @click="switchLocale(opt.value)"
             >
-              <span>{{ opt.value === 'zh-CN' ? '🇨🇳' : '🇺🇸' }}</span>
+              <span class="font-serif text-xs">{{ opt.value === 'zh-CN' ? '中' : 'EN' }}</span>
               <span>{{ opt.nativeLabel }}</span>
-              <span v-if="localeStore.locale === opt.value" class="ml-auto text-purple-500">✓</span>
+              <span v-if="localeStore.locale === opt.value" class="ml-auto text-[#a84637]">✓</span>
             </button>
           </div>
         </Transition>

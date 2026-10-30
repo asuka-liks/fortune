@@ -1,22 +1,11 @@
 <template>
-  <div class="flex flex-1 flex-col overflow-hidden">
-    <div class="flex-1 overflow-y-auto p-4">
-      <SkillSelector
-        :active-skill-id="skillStore.activeSkillId"
-        @select="handleSelectSkill"
-      />
+  <div class="flex min-h-0 flex-1 flex-col">
+    <div class="sidebar-heading hidden lg:block">
+      <p class="eyebrow">Your readings</p>
+      <h2 class="font-display mt-2 text-xl font-semibold">{{ t('sidebar.history') }}</h2>
     </div>
-    <div class="border-t p-4">
-      <div class="flex items-center justify-between">
-        <span class="text-xs font-medium text-gray-400">{{ t('sidebar.history') }}</span>
-        <button
-          class="rounded px-2 py-1 text-xs text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-          @click="handleNewChat"
-        >
-          {{ t('sidebar.newChat') }}
-        </button>
-      </div>
-      <div class="mt-2 max-h-40 overflow-y-auto space-y-1">
+    <div class="sidebar-history">
+      <div class="space-y-1">
         <div
           v-for="session in chatStore.sessions"
           :key="session.id"
@@ -29,19 +18,20 @@
           >
             <button
               :class="[
-                'flex-1 truncate rounded px-3 py-1.5 text-left text-xs transition-colors',
+                'history-item flex-1 truncate',
                 chatStore.activeSessionId === session.id
-                  ? 'bg-purple-100 text-purple-700'
-                  : 'text-gray-600 hover:bg-gray-100',
+                  ? 'active'
+                  : '',
               ]"
-              @click="chatStore.activeSessionId = session.id"
+              @click="handleSelectSession(session.id)"
               @dblclick="startRename(session.id, session.title)"
             >
               {{ session.title || t('sidebar.newChatDefault') }}
             </button>
             <!-- 删除按钮，hover 时显示 -->
             <button
-              class="ml-0.5 shrink-0 rounded p-1 text-gray-400 opacity-0 transition-opacity hover:bg-red-50 hover:text-red-500 group-hover:opacity-100"
+              class="ml-0.5 shrink-0 rounded p-2 text-[#738077] opacity-0 transition-opacity hover:text-[#a84637] group-hover:opacity-100 focus:opacity-100"
+              :aria-label="`${t('chat.dismiss')} ${session.title}`"
               @click="handleDelete(session.id)"
             >
               <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,27 +45,31 @@
             v-else
             :data-rename-input="session.id"
             v-model="renameText"
-            class="w-full rounded px-2 py-1 text-xs text-gray-700 outline-none ring-1 ring-purple-400"
+            class="w-full rounded border border-[#a84637] bg-[#fbf9f4] px-2 py-2 text-sm text-[#1c302d]"
             maxlength="50"
             @keydown.enter="confirmRename(session.id)"
             @keydown.escape="cancelRename"
             @blur="confirmRename(session.id)"
           />
         </div>
-        <p v-if="chatStore.sessions.length === 0" class="text-xs text-gray-400">
+        <p v-if="chatStore.sessions.length === 0" class="px-3 py-3 text-xs leading-6 text-[#738077]">
           {{ t('sidebar.empty') }}
         </p>
       </div>
+    </div>
+    <div class="sidebar-bottom">
+      <button class="flex min-h-11 w-full items-center justify-center gap-2 border border-[#1c302d] px-3 text-sm text-[#1c302d] transition-colors hover:bg-[#1c302d] hover:text-white" @click="handleNewChat">
+        <span aria-hidden="true">＋</span>{{ t('sidebar.newChat').replace('+ ', '') }}
+      </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { SkillId } from '~/types/skill'
-
 const chatStore = useChatStore()
 const skillStore = useSkillStore()
 const { t } = useI18n()
+const emit = defineEmits<{ selectSession: [] }>()
 
 // ---- 重命名 ----
 const editingId = ref<string | null>(null)
@@ -113,19 +107,15 @@ function handleDelete(id: string) {
   }
 }
 
-// ---- 切换技能：点击已选模式取消，点击未选模式切换 ----
-function handleSelectSkill(id: SkillId) {
-  if (skillStore.activeSkillId === id) {
-    // 再次点击已激活的模式 → 取消选择
-    skillStore.deactivateSkill()
-  } else {
-    // 点击未激活的模式 → 切换并弹出表单
-    skillStore.activateSkill(id)
-  }
+function handleSelectSession(id: string) {
+  chatStore.activeSessionId = id
+  skillStore.deactivateSkill()
+  emit('selectSession')
 }
 
 function handleNewChat() {
   chatStore.createSession(skillStore.activeSkillId ?? undefined)
   skillStore.deactivateSkill()
+  emit('selectSession')
 }
 </script>

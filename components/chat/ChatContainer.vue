@@ -1,13 +1,13 @@
 <template>
-  <div class="flex h-full flex-col">
+  <div class="chat-shell">
     <!-- 技能标签栏 -->
-    <div v-if="skillName" class="flex items-center gap-2 border-b bg-white px-4 py-2">
-      <span class="text-sm font-medium text-gray-600">{{ t('chat.currentMode') }}</span>
-      <span class="rounded-full bg-purple-100 px-3 py-0.5 text-sm font-medium text-purple-700">
+    <div class="chat-topline">
+      <span class="eyebrow">{{ t('chat.currentMode') }}</span>
+      <span v-if="skillName" class="mode-pill">
         {{ skillName }}
       </span>
       <button
-        class="ml-auto text-xs text-gray-400 hover:text-gray-600"
+        class="quiet-button ml-auto"
         @click="$emit('changeSkill')"
       >
         {{ t('chat.switch') }}
@@ -17,10 +17,11 @@
     <!-- 错误提示 -->
     <div
       v-if="error"
-      class="mx-4 mt-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700"
+      class="mx-4 mt-2 border-l-2 border-[#a84637] bg-[#f4e6e0] px-4 py-2 text-sm text-[#843428]"
+      role="alert"
     >
       {{ error }}
-      <button class="ml-2 underline" @click="$emit('dismissError')">{{ t('chat.dismiss') }}</button>
+      <button class="ml-2 min-h-11 underline" @click="$emit('dismissError')">{{ t('chat.dismiss') }}</button>
     </div>
 
     <!-- 消息列表 -->

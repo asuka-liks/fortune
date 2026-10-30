@@ -1,5 +1,5 @@
 <template>
-  <div class="max-h-[55vh] space-y-4 overflow-y-auto rounded-xl border border-amber-200 bg-amber-50/50 p-4">
+  <div class="reading-form space-y-6">
     <div class="flex items-center gap-2">
       <span class="text-lg">🔯</span>
       <span class="font-semibold text-gray-800">{{ t('bagua.title') }}</span>
@@ -7,18 +7,19 @@
 
     <div class="space-y-3">
       <!-- 提示 -->
-      <p class="rounded-lg bg-amber-100 px-3 py-2 text-xs text-amber-700">
-        💡 {{ locale === 'en' ? 'Works even better when combined with BaZi (Eight Characters) readings.' : '配合八字命理解读效果更好哦～' }}
+      <p class="border-l-2 border-[#a84637] bg-[#f4e6e0] px-3 py-2 text-xs leading-6 text-[#843428]">
+        {{ locale === 'en' ? 'Works even better when combined with BaZi (Eight Characters) readings.' : '配合八字命理解读效果更好。' }}
       </p>
 
       <!-- 问题（可选） -->
       <div>
-        <label class="mb-1 block text-xs font-medium text-gray-600">{{ t('bagua.question') }}</label>
+        <label for="bagua-question" class="mb-2 block font-medium">{{ t('bagua.question') }}</label>
         <textarea
+          id="bagua-question"
           v-model="question"
           :placeholder="t('bagua.questionPlaceholder')"
           rows="2"
-          class="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder-gray-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+          class="w-full resize-none rounded-sm border border-[#d8d5c9] bg-[#fffefa] px-3 py-3 text-sm text-[#1c302d] placeholder-[#738077] focus:border-[#a84637] focus:outline-none focus:ring-1 focus:ring-[#a84637]"
         />
       </div>
 
@@ -37,36 +38,36 @@
       <!-- 摇卦结果 -->
       <div v-else class="space-y-3">
         <!-- 六爻展示 -->
-        <div class="rounded-lg bg-white p-3">
+        <div class="border border-[#d8d5c9] bg-[#fffefa] p-4">
           <div class="mb-2 text-xs font-medium text-gray-500">{{ t('bagua.shakeResult') }}</div>
           <div class="space-y-1.5">
             <div
               v-for="s in shakeResult.shakes"
               :key="s.index"
               class="flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm"
-              :class="s.isChanging ? 'border-amber-300 bg-amber-50' : 'border-gray-200'"
+              :class="s.isChanging ? 'border-[#a84637] bg-[#f4e6e0]' : 'border-[#d8d5c9]'"
             >
               <span class="w-12 text-xs text-gray-500">{{ t('bagua.shakeIndex', { n: s.index }) }}</span>
               <span class="text-sm">{{ coinDisplay(s.heads) }}</span>
-              <span class="font-medium" :class="s.isYang ? 'text-blue-600' : 'text-red-500'">
+              <span class="font-medium text-[#1c302d]">
                 {{ locale === 'en' ? (s.type === '老阴' ? 'Old Yin' : s.type === '老阳' ? 'Old Yang' : s.type === '少阳' ? 'Young Yang' : 'Young Yin') : s.type }}
               </span>
               <span class="text-lg">{{ s.isYang ? '⚊' : '⚋' }}</span>
-              <span v-if="s.isChanging" class="ml-auto rounded bg-amber-200 px-1.5 py-0.5 text-xs text-amber-700">{{ t('bagua.changing') }}</span>
+              <span v-if="s.isChanging" class="ml-auto bg-[#e8c9bc] px-1.5 py-0.5 text-xs text-[#843428]">{{ t('bagua.changing') }}</span>
             </div>
           </div>
         </div>
 
         <!-- 卦名信息 -->
-        <div class="rounded-lg bg-white p-3">
+        <div class="border border-[#d8d5c9] bg-[#fffefa] p-4">
           <div class="mb-2 text-xs font-medium text-gray-500">{{ t('bagua.hexagramInfo') }}</div>
           <div class="grid grid-cols-2 gap-2 text-sm">
-            <div class="rounded bg-amber-50 p-2 text-center">
+            <div class="bg-[#f4e6e0] p-2 text-center">
               <div class="text-xs text-gray-500">{{ t('bagua.originalHexagram') }}</div>
               <div class="font-bold text-gray-800">{{ shakeResult.originalHexagram.nameCN }}</div>
               <div class="text-xs text-gray-500">{{ shakeResult.originalHexagram.name }}</div>
             </div>
-            <div class="rounded p-2 text-center" :class="shakeResult.derivedHexagram ? 'bg-emerald-50' : 'bg-gray-100'">
+            <div class="p-2 text-center" :class="shakeResult.derivedHexagram ? 'bg-[#e9ebe4]' : 'bg-[#e9e5d9]'">
               <div class="text-xs text-gray-500">{{ t('bagua.derivedHexagram') }}</div>
               <div class="font-bold" :class="shakeResult.derivedHexagram ? 'text-emerald-700' : 'text-gray-400'">
                 {{ shakeResult.derivedHexagram ? shakeResult.derivedHexagram.nameCN : t('bagua.noDerived') }}

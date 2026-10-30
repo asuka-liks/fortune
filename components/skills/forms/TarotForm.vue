@@ -1,5 +1,5 @@
 <template>
-  <div class="max-h-[55vh] space-y-4 overflow-y-auto rounded-xl border border-amber-200 bg-amber-50/50 p-4">
+  <div class="reading-form space-y-6">
     <div class="flex items-center gap-2">
       <span class="text-lg">🃏</span>
       <span class="font-semibold text-gray-800">{{ t('tarot.title') }}</span>
@@ -8,27 +8,28 @@
     <div class="space-y-3">
       <!-- 问题（可选） -->
       <div>
-        <label class="mb-1 block text-xs font-medium text-gray-600">{{ t('tarot.question') }}</label>
+        <label for="tarot-question" class="mb-2 block font-medium">{{ t('tarot.question') }}</label>
         <textarea
+          id="tarot-question"
           v-model="question"
           :placeholder="t('tarot.questionPlaceholder')"
           rows="2"
-          class="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm placeholder-gray-400 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+          class="w-full resize-none rounded-sm border border-[#d8d5c9] bg-[#fffefa] px-3 py-3 text-sm text-[#1c302d] placeholder-[#738077] focus:border-[#a84637] focus:outline-none focus:ring-1 focus:ring-[#a84637]"
         />
       </div>
 
       <!-- 牌阵选择 -->
       <div>
-        <label class="mb-1 block text-xs font-medium text-gray-600">{{ t('tarot.selectSpread') }}</label>
+        <label class="mb-2 block font-medium">{{ t('tarot.selectSpread') }}</label>
         <div class="flex gap-2">
           <button
             v-for="spread in spreads"
             :key="spread.value"
             :class="[
-              'flex-1 rounded-lg border px-3 py-2 text-center text-sm transition-all',
+              'min-h-16 flex-1 rounded-sm border px-3 py-2 text-center text-sm transition-colors',
               selectedSpread === spread.value
-                ? 'border-amber-400 bg-amber-100 text-amber-700'
-                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300',
+                ? 'border-[#a84637] bg-[#f4e6e0] text-[#843428]'
+                : 'border-[#d8d5c9] bg-[#fffefa] text-[#52615b] hover:border-[#a84637]',
             ]"
             @click="selectedSpread = spread.value"
           >
@@ -52,15 +53,15 @@
 
       <!-- 已抽牌结果 -->
       <div v-else class="space-y-3">
-        <div class="rounded-lg bg-white p-3">
+        <div class="border border-[#d8d5c9] bg-[#fffefa] p-4">
           <div class="mb-2 text-xs font-medium text-gray-500">{{ t('tarot.drawResult') }}</div>
           <div class="space-y-2">
             <div
               v-for="(card, i) in drawResult.cards"
               :key="i"
-              class="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 p-2"
+              class="flex items-center gap-2 border-b border-[#d8d5c9] p-2 last:border-0"
             >
-              <span class="text-lg">🃏</span>
+              <span class="font-serif text-lg text-[#a84637]">✦</span>
               <div class="flex-1 text-sm">
                 <span class="font-medium text-gray-800">{{ locale === 'en' ? card.card.name : card.card.nameCN }}</span>
                 <span class="text-xs text-gray-500"> · {{ card.position }}</span>

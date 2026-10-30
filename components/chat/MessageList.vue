@@ -1,7 +1,6 @@
 <template>
-  <div ref="containerRef" class="chat-scrollbar flex-1 overflow-y-auto py-4">
-    <EmptyState v-if="messages.length === 0" />
-    <template v-else>
+  <div ref="containerRef" class="message-list chat-scrollbar">
+    <template v-if="messages.length">
       <MessageBubble
         v-for="msg in messages"
         :key="msg.id"
