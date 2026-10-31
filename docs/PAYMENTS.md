@@ -28,8 +28,6 @@ PAYMENT_TRUST_PROXY=true
 
 本地默认 `PAYMENTS_ENABLED=false`，钱包恢复和已有次数不受此开关影响。关闭支付开关也会暂停通知处理，维护时应先处理在途订单；重新启用后可通过订单查询补记到账。
 
-内部额度码使用 `INT-` 加六组八位十六进制随机数。服务器 `.env` 仅保存去掉连字符、转成大写后的 SHA-256 摘要，变量名为 `INTERNAL_CREDIT_CODE_HASH`；留空即停用。每次正确提交给当前匿名额度钱包增加 5 次，首次提交会创建钱包并展示单独的恢复码。发放写入 `internal_credit_grants` 流水，接口沿用同源校验与每 IP 每分钟 10 次的账户操作限流。内部码一旦泄露，可被反复使用，应立即更换服务器配置并重启容器。
-
 当前商户申报的是「实物当面交易／卡密虚拟物品交易」。AI 解读次数包属于在线服务，不能自行当作卡密商品申报。启用收款前，请向小豆对接人说明实际售卖内容并取得对应交易范围确认。已在聊天中发送过的商户密钥应在后台重置；将新密钥只写入服务器 `.env`，再开启 `PAYMENTS_ENABLED=true`。
 
 ## Docker 与 Nginx
@@ -69,7 +67,6 @@ proxy_set_header X-Real-IP $remote_addr;
 npm test
 npm run build
 node --test smoke/billing-http.mjs
-node --test smoke/internal-credit-http.mjs
 ```
 
 自动测试使用临时数据库和虚假凭证，不请求真实支付渠道。上线后由商户完成一次 1 元真实付款，核验以下结果：

@@ -47,11 +47,12 @@ test('首次输入内部码时自动建立可恢复的匿名钱包', t => {
   assert.equal(db.recover(grant.recoveryCode).wallet.id, grant.wallet.id)
 })
 
-test('内部码只接受已配置的正确随机码，大小写不影响验证', () => {
-  const code = `INT-${'ABCD1234-'.repeat(5)}ABCD1234`
-  const hash = digest(code.replaceAll('-', ''))
+test('自定义内部码只接受已配置的正确值，大小写不影响验证', () => {
+  const code = 'PRIVATEACCESSKEYS'
+  const hash = digest(code)
   assert.equal(isInternalCreditCode(code.toLowerCase(), hash), true)
-  assert.equal(isInternalCreditCode(code.replace('ABCD', 'FFFF'), hash), false)
+  assert.equal(isInternalCreditCode(code.replace('PRIVATE', 'PUBLIC'), hash), false)
+  assert.equal(isInternalCreditCode('short', hash), false)
   assert.equal(isInternalCreditCode(code, undefined), false)
   assert.equal(isInternalCreditCode(code, 'bad-hash'), false)
 })

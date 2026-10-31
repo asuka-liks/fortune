@@ -8,8 +8,8 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
-const code = `INT-${Array(6).fill('ABCD1234').join('-')}`
-const hash = createHash('sha256').update(code.replaceAll('-', '')).digest('hex')
+const code = 'PRIVATEACCESSKEYS'
+const hash = createHash('sha256').update(code).digest('hex')
 const port = 30000 + Math.floor(Math.random() * 20000)
 const base = `http://127.0.0.1:${port}/project/fortune/api`
 
@@ -53,7 +53,7 @@ test('内部码通过公开域名来源校验，每次给当前浏览器增加 5
   assert.equal(initial.status, 200)
   assert.equal(initial.data.quota.free, 3)
   assert.equal(initial.data.quota.paid, 0)
-  const invalid = await api('/billing/account', { action: 'recover', recoveryCode: code.replace('ABCD', 'FFFF') })
+  const invalid = await api('/billing/account', { action: 'recover', recoveryCode: code.replace('PRIVATE', 'PUBLIC') })
   assert.equal(invalid.status, 401)
   assert.equal(invalid.cookie, null)
 

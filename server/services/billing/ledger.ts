@@ -15,8 +15,8 @@ const SESSION_MS = 365 * 24 * 3600_000
 export const digest = (value: string) => createHash('sha256').update(value).digest('hex')
 const recoveryHash = (code: string) => digest(code.replaceAll('-', '').trim().toUpperCase())
 export function isInternalCreditCode(code: string, configuredHash?: string) {
-  const normalized = code.trim().replaceAll('-', '').toUpperCase()
-  if (!/^INT[A-F0-9]{48}$/.test(normalized) || !configuredHash || !/^[A-Fa-f0-9]{64}$/.test(configuredHash)) return false
+  const normalized = code.trim().toUpperCase()
+  if (!/^[A-Z0-9_-]{16,80}$/.test(normalized) || !configuredHash || !/^[A-Fa-f0-9]{64}$/.test(configuredHash)) return false
   return timingSafeEqual(Buffer.from(digest(normalized), 'hex'), Buffer.from(configuredHash, 'hex'))
 }
 const newRecovery = () => randomBytes(24).toString('hex').toUpperCase().match(/.{8}/g)!.join('-')
